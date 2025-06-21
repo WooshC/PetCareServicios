@@ -146,7 +146,7 @@ PetCareServicios/
     "ExpireMinutes": 60
   },
   "ConnectionStrings": {
-    "DefaultConnection": "Server=db;Database=PetCareAuth;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
+    "DefaultConnection": "Server=localhost,14433;Database=PetCareAuth;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
   }
 }
 ```
@@ -213,9 +213,8 @@ Este proyecto está bajo la **Licencia MIT** - ver el archivo [LICENSE](LICENSE)
 
 ## 📞 Soporte
 
-- 🐛 **Issues**: [Crear un issue](https://github.com/tu-usuario/PetCareServicios/issues)
+- 🐛 **Issues**: [Crear un issue](https://github.com/WooshC/PetCareServicios/issues)
 - 📧 **Email**: soporte@petcare.com
-- 💬 **Discord**: [Unirse al servidor](https://discord.gg/petcare)
 
 ---
 
