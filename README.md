@@ -24,7 +24,7 @@ API REST para servicios de cuidado de mascotas desarrollada en **.NET 8** con au
 
 ```bash
 # 1. Clonar el repositorio
-git clone <url-del-repositorio>
+git clone https://github.com/WooshC/PetCareServicios
 cd PetCareServicios
 
 # 2. Ejecutar con Docker Compose
@@ -38,7 +38,7 @@ curl http://localhost:5000/api/auth/health
 
 ```bash
 # 1. Clonar el repositorio
-git clone <url-del-repositorio>
+git clone https://github.com/WooshC/PetCareServicios
 cd PetCareServicios
 
 # 2. Configurar la base de datos
