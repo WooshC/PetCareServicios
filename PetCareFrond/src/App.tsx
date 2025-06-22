@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { authService, cuidadorService } from './services/api';
-import { CuidadorRequest, RegisterRequestWithRole, LoginRequestWithRole } from './types/cuidador';
+import { LoginRequest, RegisterRequest, AuthResponse } from './types/auth';
+import { CuidadorRequest, CuidadorResponse, RegisterRequestWithRole, LoginRequestWithRole } from './types/cuidador';
 import Layout from './components/Layout';
 import CuidadorForm from './components/CuidadorForm';
 import CuidadorMain from './components/cuidador/CuidadorMain';
+import ChangePasswordForm from './components/ChangePasswordForm';
 // Tipos de vistas disponibles en la aplicación
-type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador-dashboard';
+type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador-dashboard' | 'change-password';
 
 /**
  * Componente principal de la aplicación PetCare
@@ -33,14 +35,14 @@ function App() {
 
   // ===== ESTADOS DE FORMULARIOS =====
   
-  // Datos del formulario de login con rol
+  // Formulario de login
   const [loginForm, setLoginForm] = useState<LoginRequestWithRole>({
     email: '',
     password: '',
     role: 'Cliente'
   });
 
-  // Datos del formulario de registro con rol
+  // Formulario de registro
   const [registerForm, setRegisterForm] = useState<RegisterRequestWithRole>({
     email: '',
     password: '',
@@ -50,22 +52,11 @@ function App() {
 
   // ===== MANEJADORES DE FORMULARIOS =====
 
-  /**
-   * Maneja el envío de formularios (login y registro)
-   * Valida el formulario y ejecuta la acción correspondiente
-   */
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>, formType: 'login' | 'register') => {
     event.preventDefault();
-    event.stopPropagation();
-    
-    const form = event.currentTarget;
-    if (form.checkValidity() === false) {
-      setValidated(true);
-      return;
-    }
+    setLoading(true);
+    setMessage(null);
 
-    setValidated(false);
-    
     if (formType === 'login') {
       handleLogin();
     } else {
@@ -74,119 +65,105 @@ function App() {
   };
 
   /**
-   * Procesa el login del usuario
+   * Maneja el proceso de login
    * FLUJO:
-   * 1. Valida credenciales con la API
-   * 2. Si es exitoso, guarda el token
-   * 3. Si es Cuidador, verifica si tiene perfil
-   * 4. Redirige según el resultado
+   * 1. Valida las credenciales con la API
+   * 2. Si es exitoso, guarda el token y redirige al dashboard
+   * 3. Si falla, muestra mensaje de error
    */
   const handleLogin = async () => {
-    setLoading(true);
-    setMessage(null);
-
     try {
       // Llamada a la API para autenticación
       const response = await authService.loginWithRole(loginForm);
       
       if (response.success) {
-        // Guardar token en localStorage
-        authService.setToken(response.token);
-        setMessage({ text: '¡Inicio de sesión exitoso!', type: 'success' });
+        setMessage({ 
+          text: '¡Login exitoso!', 
+          type: 'success' 
+        });
         
-        // FLUJO ESPECÍFICO PARA CUIDADORES
+        // Redirigir según el rol
         if (loginForm.role === 'Cuidador') {
-          try {
-            // Verificar si el cuidador ya tiene un perfil creado
-            await cuidadorService.getMiPerfil();
-            // Si tiene perfil, ir al dashboard de cuidador
-            setCurrentView('cuidador-dashboard');
-          } catch (error) {
-            // Si no tiene perfil, ir al formulario de creación
-            setCurrentView('cuidador-form');
-          }
+          setCurrentView('cuidador-dashboard');
         } else {
-          // Si es Cliente, ir al dashboard general
           setCurrentView('dashboard');
         }
       } else {
-        setMessage({ text: response.message, type: 'error' });
+        setMessage({ 
+          text: response.message || 'Error en el login', 
+          type: 'error' 
+        });
       }
     } catch (error: any) {
       setMessage({ 
-        text: error.response?.data?.message || 'Error al iniciar sesión', 
+        text: error.response?.data?.message || 'Error de conexión', 
         type: 'error' 
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   /**
-   * Procesa el registro de nuevos usuarios
+   * Maneja el proceso de registro
    * FLUJO:
-   * 1. Crea el usuario en la API
-   * 2. Si es exitoso, guarda el token
-   * 3. Si es Cuidador, redirige al formulario de perfil
-   * 4. Si es Cliente, redirige al dashboard
+   * 1. Registra el usuario con la API
+   * 2. Si es exitoso, guarda el token y redirige según el rol
+   * 3. Si falla, muestra mensaje de error
    */
   const handleRegister = async () => {
-    setLoading(true);
-    setMessage(null);
-
     try {
       // Llamada a la API para registro
       const response = await authService.registerWithRole(registerForm);
       
       if (response.success) {
-        // Guardar token en localStorage
-        authService.setToken(response.token);
-        setMessage({ text: '¡Registro exitoso!', type: 'success' });
+        setMessage({ 
+          text: '¡Registro exitoso!', 
+          type: 'success' 
+        });
         
-        // FLUJO ESPECÍFICO PARA CUIDADORES
+        // Redirigir según el rol
         if (registerForm.role === 'Cuidador') {
-          // Los cuidadores deben completar su perfil después del registro
           setCurrentView('cuidador-form');
         } else {
-          // Los clientes van directamente al dashboard
           setCurrentView('dashboard');
         }
       } else {
-        setMessage({ text: response.message, type: 'error' });
+        setMessage({ 
+          text: response.message || 'Error en el registro', 
+          type: 'error' 
+        });
       }
     } catch (error: any) {
       setMessage({ 
-        text: error.response?.data?.message || 'Error al registrar usuario', 
+        text: error.response?.data?.message || 'Error de conexión', 
         type: 'error' 
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   /**
-   * Procesa la creación del perfil de cuidador
+   * Maneja el envío del formulario de cuidador
    * FLUJO:
-   * 1. Envía datos del perfil a la API
-   * 2. Si es exitoso, redirige al dashboard de cuidador
+   * 1. Crea el perfil de cuidador en la API
+   * 2. Si es exitoso, redirige al dashboard del cuidador
+   * 3. Si falla, muestra mensaje de error
    */
   const handleCuidadorSubmit = async (data: CuidadorRequest) => {
-    setLoading(true);
-    setMessage(null);
-
     try {
       // Crear perfil de cuidador en la API
-      await cuidadorService.createCuidador(data);
-      setMessage({ text: '¡Perfil de cuidador creado exitosamente!', type: 'success' });
-      // Ir al dashboard de cuidador
+      const response = await cuidadorService.createCuidador(data);
+      
+      setMessage({ 
+        text: '¡Perfil de cuidador creado exitosamente!', 
+        type: 'success' 
+      });
+      
+      // Redirigir al dashboard del cuidador
       setCurrentView('cuidador-dashboard');
     } catch (error: any) {
       setMessage({ 
         text: error.response?.data?.message || 'Error al crear perfil de cuidador', 
         type: 'error' 
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -194,8 +171,8 @@ function App() {
    * Maneja el logout del usuario
    * FLUJO:
    * 1. Elimina el token del localStorage
-   * 2. Resetea todos los estados
-   * 3. Regresa a la vista de login
+   * 2. Limpia los estados de la aplicación
+   * 3. Redirige al login
    */
   const handleLogout = () => {
     authService.removeToken();
@@ -209,7 +186,10 @@ function App() {
   // ===== MANEJADORES DE CAMBIOS =====
 
   /**
-   * Actualiza los campos de los formularios
+   * Maneja los cambios en los campos de los formularios
+   * @param form - Tipo de formulario ('login' o 'register')
+   * @param field - Campo que cambió
+   * @param value - Nuevo valor
    */
   const handleInputChange = (form: 'login' | 'register', field: string, value: string) => {
     if (form === 'login') {
@@ -217,16 +197,38 @@ function App() {
     } else {
       setRegisterForm(prev => ({ ...prev, [field]: value }));
     }
+    setMessage(null);
   };
 
   /**
    * Maneja el cambio de rol seleccionado
-   * Actualiza tanto el estado visual como los formularios
+   * @param role - Nuevo rol seleccionado
    */
   const handleRoleChange = (role: 'Cliente' | 'Cuidador') => {
     setSelectedRole(role);
     setLoginForm(prev => ({ ...prev, role }));
     setRegisterForm(prev => ({ ...prev, role }));
+  };
+
+  // ===== MANEJADORES DE CAMBIO DE CONTRASEÑA =====
+
+  const handleChangePassword = () => {
+    setCurrentView('change-password');
+    setMessage(null);
+  };
+
+  const handleBackToLogin = () => {
+    setCurrentView('login');
+    setMessage(null);
+  };
+
+  const handlePasswordChangeSuccess = (message: string) => {
+    setMessage({ text: message, type: 'success' });
+    // Redirigir al login después de cambiar la contraseña
+    setTimeout(() => {
+      setCurrentView('login');
+      setMessage(null);
+    }, 2000);
   };
 
   // ===== EFECTOS =====
@@ -337,14 +339,37 @@ function App() {
       </div>
 
       {/* Botón de envío */}
-      <button 
-        type="submit" 
-        className="btn btn-primary w-100 py-2"
+      <button
+        type="submit"
+        className="btn btn-primary w-100"
         disabled={loading}
       >
-        <i className="bi bi-box-arrow-in-right"></i> 
         {loading ? 'Ingresando...' : 'Ingresar'}
       </button>
+
+      {/* Enlace para cambiar contraseña */}
+      <div className="text-center mt-3">
+        <button 
+          type="button" 
+          className="btn btn-link text-decoration-none"
+          onClick={handleChangePassword}
+          disabled={loading}
+        >
+          <i className="bi bi-key"></i> Cambiar Contraseña
+        </button>
+      </div>
+
+      {/* Enlace para ir al registro */}
+      <div className="text-center mt-2">
+        <button 
+          type="button" 
+          className="btn btn-link text-decoration-none"
+          onClick={() => setCurrentView('register')}
+          disabled={loading}
+        >
+          <i className="bi bi-person-plus"></i> ¿No tienes una cuenta? Regístrate
+        </button>
+      </div>
     </form>
   );
 
@@ -435,14 +460,25 @@ function App() {
       </div>
 
       {/* Botón de envío */}
-      <button 
-        type="submit" 
-        className="btn btn-primary w-100 py-2"
+      <button
+        type="submit"
+        className="btn btn-primary w-100"
         disabled={loading}
       >
-        <i className="bi bi-person-plus"></i> 
         {loading ? 'Registrando...' : 'Registrarse'}
       </button>
+
+      {/* Enlace para volver al login */}
+      <div className="text-center mt-3">
+        <button 
+          type="button" 
+          className="btn btn-link text-decoration-none"
+          onClick={() => setCurrentView('login')}
+          disabled={loading}
+        >
+          <i className="bi bi-arrow-left"></i> ¿Ya tienes una cuenta? Inicia sesión
+        </button>
+      </div>
     </form>
   );
 
@@ -494,6 +530,11 @@ function App() {
         return renderDashboard();
       case 'cuidador-dashboard':
         return <CuidadorMain onLogout={handleLogout} />;
+      case 'change-password':
+        return <ChangePasswordForm 
+          onBack={handleBackToLogin}
+          onSuccess={handlePasswordChangeSuccess}
+        />;
       default:
         return renderLoginForm();
     }
@@ -542,25 +583,35 @@ function App() {
                 {renderContent()}
 
                 {/* Navegación entre login y registro */}
-                {currentView !== 'cuidador-form' && currentView !== 'dashboard' && (
+                {currentView !== 'cuidador-form' && currentView !== 'dashboard' && currentView !== 'change-password' && (
                   <>
                     <hr className="my-4" />
                     <div className="text-center">
-                      <p className="mb-2">
-                        {currentView === 'login' ? '¿No tienes una cuenta?' : '¿Ya tienes una cuenta?'}
-                      </p>
-                      <button 
-                        type="button"
-                        className="btn btn-outline-primary"
-                        onClick={() => {
-                          setCurrentView(currentView === 'login' ? 'register' : 'login');
-                          setMessage(null);
-                          setValidated(false);
-                        }}
-                      >
-                        <i className={`bi ${currentView === 'login' ? 'bi-person-plus' : 'bi-person-fill'}`}></i> 
-                        {currentView === 'login' ? 'Regístrate aquí' : 'Inicia sesión aquí'}
-                      </button>
+                      <div className="btn-group" role="group">
+                        <input
+                          type="radio"
+                          className="btn-check"
+                          name="role"
+                          id="cliente"
+                          checked={selectedRole === 'Cliente'}
+                          onChange={() => handleRoleChange('Cliente')}
+                        />
+                        <label className="btn btn-outline-primary" htmlFor="cliente">
+                          <i className="bi bi-person"></i> Cliente
+                        </label>
+
+                        <input
+                          type="radio"
+                          className="btn-check"
+                          name="role"
+                          id="cuidador"
+                          checked={selectedRole === 'Cuidador'}
+                          onChange={() => handleRoleChange('Cuidador')}
+                        />
+                        <label className="btn btn-outline-primary" htmlFor="cuidador">
+                          <i className="bi bi-heart"></i> Cuidador
+                        </label>
+                      </div>
                     </div>
                   </>
                 )}

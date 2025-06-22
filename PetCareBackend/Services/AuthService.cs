@@ -209,6 +209,43 @@ namespace PetCareServicios.Services
             return Task.FromResult(true);
         }
 
+        // ===== MÉTODO PARA TESTING - CAMBIO DIRECTO DE CONTRASEÑA =====
+
+        public async Task<PasswordResetResponse> ChangePasswordDirectlyAsync(DirectPasswordChangeRequest request)
+        {
+            // Buscar usuario por email
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return new PasswordResetResponse 
+                { 
+                    Success = false, 
+                    Message = "Usuario no encontrado" 
+                };
+            }
+
+            // Generar token de reset temporal
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            
+            // Cambiar contraseña usando el token generado
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, request.NewPassword);
+            
+            if (!result.Succeeded)
+            {
+                return new PasswordResetResponse 
+                { 
+                    Success = false, 
+                    Message = string.Join(", ", result.Errors.Select(e => e.Description)) 
+                };
+            }
+
+            return new PasswordResetResponse 
+            { 
+                Success = true, 
+                Message = "Contraseña cambiada exitosamente" 
+            };
+        }
+
         // ===== MÉTODOS AUXILIARES =====
 
         private string GenerateResetToken()

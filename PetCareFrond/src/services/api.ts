@@ -51,6 +51,9 @@ export const authService = {
    */
   async loginWithRole(credentials: LoginRequestWithRole): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/login', credentials);
+    if (response.data.success) {
+      this.setToken(response.data.token);
+    }
     return response.data;
   },
 
@@ -67,6 +70,9 @@ export const authService = {
    */
   async registerWithRole(userData: RegisterRequestWithRole): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/register', userData);
+    if (response.data.success) {
+      this.setToken(response.data.token);
+    }
     return response.data;
   },
 
@@ -76,6 +82,9 @@ export const authService = {
    */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/login', credentials);
+    if (response.data.success) {
+      this.setToken(response.data.token);
+    }
     return response.data;
   },
 
@@ -85,6 +94,9 @@ export const authService = {
    */
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/register', userData);
+    if (response.data.success) {
+      this.setToken(response.data.token);
+    }
     return response.data;
   },
 
@@ -135,6 +147,25 @@ export const authService = {
    */
   isAuthenticated(): boolean {
     return !!this.getToken();
+  },
+
+  /**
+   * Cambia la contraseña directamente (SOLO PARA TESTING)
+   * FLUJO:
+   * 1. Envía email y nueva contraseña a la API
+   * 2. API busca el usuario por email
+   * 3. Genera token temporal y cambia la contraseña
+   * 4. Retorna confirmación
+   * 
+   * ⚠️ ADVERTENCIA: Este método es solo para testing.
+   * En producción, usar el flujo normal con tokens de recuperación.
+   * 
+   * @param request - Email y nueva contraseña
+   * @returns Promise con respuesta de cambio de contraseña
+   */
+  async changePasswordDirect(request: { email: string; newPassword: string; confirmPassword: string }): Promise<{ success: boolean; message: string }> {
+    const response = await api.post<{ success: boolean; message: string }>('/auth/change-password-direct', request);
+    return response.data;
   }
 };
 

@@ -165,6 +165,30 @@ namespace PetCareServicios.Controllers
         }
 
         /// <summary>
+        /// Cambia la contraseña directamente (SOLO PARA TESTING)
+        /// FLUJO:
+        /// 1. Recibe el email del usuario y la nueva contraseña
+        /// 2. Busca el usuario por email
+        /// 3. Genera un token temporal y cambia la contraseña
+        /// 4. Retorna confirmación
+        /// 
+        /// ⚠️ ADVERTENCIA: Este endpoint es solo para testing.
+        /// En producción, usar el flujo normal con tokens de recuperación.
+        /// </summary>
+        /// <param name="request">Email y nueva contraseña</param>
+        /// <returns>Mensaje de confirmación</returns>
+        [HttpPost("change-password-direct")]
+        public async Task<ActionResult<PasswordResetResponse>> ChangePasswordDirect([FromBody] DirectPasswordChangeRequest request)
+        {
+            var response = await _authService.ChangePasswordDirectlyAsync(request);
+            
+            if (response.Success)
+                return Ok(response);
+            else
+                return BadRequest(response);
+        }
+
+        /// <summary>
         /// Endpoint de salud para verificar que la API esté funcionando
         /// Útil para testing y monitoreo
         /// </summary>

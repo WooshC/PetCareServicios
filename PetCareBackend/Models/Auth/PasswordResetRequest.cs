@@ -30,6 +30,24 @@ namespace PetCareServicios.Models.Auth
     }
 
     /// <summary>
+    /// DTO para cambio de contraseña directo (para testing)
+    /// </summary>
+    public class DirectPasswordChangeRequest
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [MinLength(8)]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required]
+        [Compare("NewPassword")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+    /// <summary>
     /// DTO para respuesta de restablecimiento de contraseña
     /// </summary>
     public class PasswordResetResponse

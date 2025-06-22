@@ -12,5 +12,8 @@ namespace PetCareServicios.Services.Interfaces
         Task<PasswordResetResponse> RequestPasswordResetAsync(PasswordResetRequest request);
         Task<PasswordResetResponse> ConfirmPasswordResetAsync(PasswordResetConfirmRequest request);
         Task<bool> ValidateResetTokenAsync(string token);
+        
+        // ===== MÉTODO PARA TESTING - CAMBIO DIRECTO DE CONTRASEÑA =====
+        Task<PasswordResetResponse> ChangePasswordDirectlyAsync(DirectPasswordChangeRequest request);
     }
 } 
