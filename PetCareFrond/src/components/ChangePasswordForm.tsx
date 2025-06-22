@@ -153,14 +153,6 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onBack, onSucce
             </button>
           </div>
         </form>
-
-        {/* Información */}
-        <div className="mt-3">
-          <div className="alert alert-info">
-            <i className="bi bi-info-circle"></i>
-            <strong>Nota:</strong> Este formulario es para testing. Solo necesitas el email del usuario para cambiar la contraseña.
-          </div>
-        </div>
       </div>
     </div>
   );

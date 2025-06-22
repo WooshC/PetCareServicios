@@ -99,6 +99,8 @@ function App() {
         text: error.response?.data?.message || 'Error de conexión', 
         type: 'error' 
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -137,6 +139,8 @@ function App() {
         text: error.response?.data?.message || 'Error de conexión', 
         type: 'error' 
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,6 +168,8 @@ function App() {
         text: error.response?.data?.message || 'Error al crear perfil de cuidador', 
         type: 'error' 
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -355,7 +361,7 @@ function App() {
           onClick={handleChangePassword}
           disabled={loading}
         >
-          <i className="bi bi-key"></i> Cambiar Contraseña
+          <i className="bi bi-question-circle"></i> ¿Olvidaste tu contraseña? Haz clic aquí
         </button>
       </div>
 
@@ -581,40 +587,6 @@ function App() {
 
                 {/* Contenido principal */}
                 {renderContent()}
-
-                {/* Navegación entre login y registro */}
-                {currentView !== 'cuidador-form' && currentView !== 'dashboard' && currentView !== 'change-password' && (
-                  <>
-                    <hr className="my-4" />
-                    <div className="text-center">
-                      <div className="btn-group" role="group">
-                        <input
-                          type="radio"
-                          className="btn-check"
-                          name="role"
-                          id="cliente"
-                          checked={selectedRole === 'Cliente'}
-                          onChange={() => handleRoleChange('Cliente')}
-                        />
-                        <label className="btn btn-outline-primary" htmlFor="cliente">
-                          <i className="bi bi-person"></i> Cliente
-                        </label>
-
-                        <input
-                          type="radio"
-                          className="btn-check"
-                          name="role"
-                          id="cuidador"
-                          checked={selectedRole === 'Cuidador'}
-                          onChange={() => handleRoleChange('Cuidador')}
-                        />
-                        <label className="btn btn-outline-primary" htmlFor="cuidador">
-                          <i className="bi bi-heart"></i> Cuidador
-                        </label>
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
           </div>
