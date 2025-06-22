@@ -5,7 +5,7 @@ services:
       - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__AuthConnection=Server=db;Database=PetCareAuth;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=db;Database=PetCareAuth;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
       - ConnectionStrings__CuidadoresConnection=Server=db;Database=PetCareCuidadores;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
       - ConnectionStrings__ClientesConnection=Server=db;Database=PetCareClientes;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
       - ConnectionStrings__SolicitudesConnection=Server=db;Database=PetCareSolicitudes;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
@@ -25,6 +25,12 @@ services:
     volumes:
       - sql_data:/var/opt/mssql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
 volumes:
   sql_data:

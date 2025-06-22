@@ -7,7 +7,7 @@ namespace PetCareServicios.Controllers
 {
     /// <summary>
     /// Controlador para manejar autenticación y registro de usuarios
-    /// Gestiona login, registro y asignación de roles
+    /// Gestiona login, registro, asignación de roles y recuperación de contraseña
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -107,6 +107,61 @@ namespace PetCareServicios.Controllers
                 
             // Paso 5: Retornar respuesta exitosa con token
             return Ok(response);
+        }
+
+        /// <summary>
+        /// Solicita restablecimiento de contraseña
+        /// FLUJO:
+        /// 1. Recibe el email del usuario
+        /// 2. Genera un token único de restablecimiento
+        /// 3. Almacena el token temporalmente
+        /// 4. En producción, envía un email con el enlace
+        /// </summary>
+        /// <param name="request">Email del usuario</param>
+        /// <returns>Mensaje de confirmación</returns>
+        [HttpPost("forgot-password")]
+        public async Task<ActionResult<PasswordResetResponse>> ForgotPassword([FromBody] PasswordResetRequest request)
+        {
+            var response = await _authService.RequestPasswordResetAsync(request);
+            
+            if (response.Success)
+                return Ok(response);
+            else
+                return BadRequest(response);
+        }
+
+        /// <summary>
+        /// Confirma el restablecimiento de contraseña
+        /// FLUJO:
+        /// 1. Recibe el token y la nueva contraseña
+        /// 2. Valida el token
+        /// 3. Cambia la contraseña del usuario
+        /// 4. Elimina el token usado
+        /// </summary>
+        /// <param name="request">Token y nueva contraseña</param>
+        /// <returns>Mensaje de confirmación</returns>
+        [HttpPost("reset-password")]
+        public async Task<ActionResult<PasswordResetResponse>> ResetPassword([FromBody] PasswordResetConfirmRequest request)
+        {
+            var response = await _authService.ConfirmPasswordResetAsync(request);
+            
+            if (response.Success)
+                return Ok(response);
+            else
+                return BadRequest(response);
+        }
+
+        /// <summary>
+        /// Valida un token de restablecimiento de contraseña
+        /// Útil para verificar si un token es válido antes de mostrar el formulario de nueva contraseña
+        /// </summary>
+        /// <param name="token">Token a validar</param>
+        /// <returns>true si el token es válido, false en caso contrario</returns>
+        [HttpGet("validate-reset-token")]
+        public async Task<ActionResult<bool>> ValidateResetToken([FromQuery] string token)
+        {
+            var isValid = await _authService.ValidateResetTokenAsync(token);
+            return Ok(isValid);
         }
 
         /// <summary>

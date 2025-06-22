@@ -31,7 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\Auth\" />
     <Folder Include="Migrations\Cuidadores\" />
     <Folder Include="Migrations\Calificaciones\" />
     <Folder Include="PetCareBackend\Models\" />

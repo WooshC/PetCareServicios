@@ -42,7 +42,10 @@ namespace PetCareServicios.Data
                 entity.Property(e => e.FechaCalificacion).HasDefaultValueSql("GETUTCDATE()");
                 
                 // Restricciones
-                entity.HasCheckConstraint("CHK_Puntuacion", "Puntuacion BETWEEN 1 AND 5");
+                entity.ToTable("Calificaciones", t =>
+                {
+                    t.HasCheckConstraint("CHK_Puntuacion", "Puntuacion BETWEEN 1 AND 5");
+                });
                 
                 // Índices para mejorar el rendimiento
                 entity.HasIndex(e => e.CuidadorID).HasDatabaseName("IX_Calificaciones_CuidadorID");

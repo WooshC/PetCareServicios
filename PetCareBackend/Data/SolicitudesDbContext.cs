@@ -48,8 +48,11 @@ namespace PetCareServicios.Data
                 entity.Property(e => e.FechaCreacion).HasDefaultValueSql("GETUTCDATE()");
                 
                 // Restricciones
-                entity.HasCheckConstraint("CHK_Duracion", "DuracionHoras > 0");
-                entity.HasCheckConstraint("CHK_Estado", "Estado IN ('Pendiente', 'Aceptada', 'En Progreso', 'Fuera de Tiempo', 'Finalizada', 'Rechazada')");
+                entity.ToTable("Solicitudes", t =>
+                {
+                    t.HasCheckConstraint("CHK_Duracion", "DuracionHoras > 0");
+                    t.HasCheckConstraint("CHK_Estado", "Estado IN ('Pendiente', 'Aceptada', 'En Progreso', 'Fuera de Tiempo', 'Finalizada', 'Rechazada')");
+                });
                 
                 // Índices para mejorar el rendimiento
                 entity.HasIndex(e => e.CuidadorID).HasDatabaseName("IX_Solicitudes_CuidadorID");
