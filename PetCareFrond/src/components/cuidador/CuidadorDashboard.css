@@ -11,6 +11,75 @@ body, html {
   min-height: 100vh;
 }
 
+/* Estilos para el header del cuidador */
+.cuidador-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cuidador-header .navbar-brand {
+  font-weight: 700;
+  color: #667eea !important;
+}
+
+.cuidador-header .nav-link {
+  color: #6c757d !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  background: none;
+  padding: 0.5rem 1rem;
+}
+
+.cuidador-header .nav-link:hover {
+  color: #667eea !important;
+  background-color: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+}
+
+.cuidador-header .nav-link.active {
+  color: #667eea !important;
+  background-color: rgba(102, 126, 234, 0.15);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.cuidador-header .dropdown-toggle::after {
+  margin-left: 0.5rem;
+}
+
+.cuidador-header .dropdown-menu {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.cuidador-header .dropdown-item {
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.cuidador-header .dropdown-item:hover {
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+.cuidador-header .dropdown-item.text-danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Estilos para las secciones */
+.solicitudes-section,
+.historial-section {
+  background-color: #ffffff;
+  min-height: calc(100vh - 80px);
+}
+
+.cuidador-main {
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
 .cuidador-dashboard .card {
   border-radius: 12px;
   border: 3px solid #e9ecef;
@@ -152,5 +221,14 @@ body, html {
 
   .edit-profile-modal {
     max-height: 60vh;
+  }
+
+  .cuidador-header .navbar-nav {
+    text-align: center;
+  }
+
+  .cuidador-header .nav-link {
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 0;
   }
 }

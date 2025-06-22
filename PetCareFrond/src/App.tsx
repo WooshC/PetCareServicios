@@ -3,7 +3,7 @@ import { authService, cuidadorService } from './services/api';
 import { CuidadorRequest, RegisterRequestWithRole, LoginRequestWithRole } from './types/cuidador';
 import Layout from './components/Layout';
 import CuidadorForm from './components/CuidadorForm';
-import CuidadorDashboard from './components/cuidador/CuidadorDashboard';
+import CuidadorMain from './components/cuidador/CuidadorMain';
 // Tipos de vistas disponibles en la aplicación
 type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador-dashboard';
 
@@ -493,7 +493,7 @@ function App() {
       case 'dashboard':
         return renderDashboard();
       case 'cuidador-dashboard':
-        return <CuidadorDashboard onLogout={handleLogout} />;
+        return <CuidadorMain onLogout={handleLogout} />;
       default:
         return renderLoginForm();
     }
@@ -504,7 +504,7 @@ function App() {
   // Si estamos en el dashboard de cuidador, no usar el layout de login
   // Esto permite que el dashboard tenga su propio diseño completo
   if (currentView === 'cuidador-dashboard') {
-    return <CuidadorDashboard onLogout={handleLogout} />;
+    return <CuidadorMain onLogout={handleLogout} />;
   }
 
   // Renderizado principal con layout de login/registro
