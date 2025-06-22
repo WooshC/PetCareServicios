@@ -97,6 +97,7 @@ PetCareServicios/
 Para información específica sobre instalación, configuración y uso, consulta:
 
 - **[📖 README Backend](README_BACKEND.md)** - Instalación, configuración y API del backend
+- **[🎨 README Frontend](FRONTEND_README.md)** - Instalación, desarrollo y componentes del frontend
 - **[🔧 README Mantenimiento](README_MANTENIMIENTO.md)** - Debugging, modificaciones y troubleshooting
 - **[🚀 README Deploy](README_DEPLOY.md)** - Guía de despliegue y configuración de producción
 
