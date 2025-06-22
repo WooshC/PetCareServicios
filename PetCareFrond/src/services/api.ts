@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { LoginRequest, RegisterRequest, AuthResponse } from '../types/auth';
+import { CuidadorRequest, CuidadorResponse, RegisterRequestWithRole, LoginRequestWithRole } from '../types/cuidador';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -21,13 +22,25 @@ api.interceptors.request.use((config) => {
 });
 
 export const authService = {
-  // Login user
+  // Login user with role
+  async loginWithRole(credentials: LoginRequestWithRole): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth/login', credentials);
+    return response.data;
+  },
+
+  // Register user with role
+  async registerWithRole(userData: RegisterRequestWithRole): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth/register', userData);
+    return response.data;
+  },
+
+  // Login user (legacy method)
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/login', credentials);
     return response.data;
   },
 
-  // Register user
+  // Register user (legacy method)
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/register', userData);
     return response.data;
@@ -57,6 +70,55 @@ export const authService = {
   // Check if user is authenticated
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+};
+
+export const cuidadorService = {
+  // Get all cuidadores
+  async getAllCuidadores(): Promise<CuidadorResponse[]> {
+    const response = await api.get<CuidadorResponse[]>('/cuidador');
+    return response.data;
+  },
+
+  // Get cuidador by ID
+  async getCuidadorById(id: number): Promise<CuidadorResponse> {
+    const response = await api.get<CuidadorResponse>(`/cuidador/${id}`);
+    return response.data;
+  },
+
+  // Get my cuidador profile
+  async getMiPerfil(): Promise<CuidadorResponse> {
+    const response = await api.get<CuidadorResponse>('/cuidador/mi-perfil');
+    return response.data;
+  },
+
+  // Create cuidador profile
+  async createCuidador(request: CuidadorRequest): Promise<CuidadorResponse> {
+    const response = await api.post<CuidadorResponse>('/cuidador', request);
+    return response.data;
+  },
+
+  // Update cuidador profile
+  async updateCuidador(id: number, request: CuidadorRequest): Promise<CuidadorResponse> {
+    const response = await api.put<CuidadorResponse>(`/cuidador/${id}`, request);
+    return response.data;
+  },
+
+  // Update my cuidador profile
+  async updateMiPerfil(request: CuidadorRequest): Promise<CuidadorResponse> {
+    const response = await api.put<CuidadorResponse>('/cuidador/mi-perfil', request);
+    return response.data;
+  },
+
+  // Delete cuidador (admin only)
+  async deleteCuidador(id: number): Promise<void> {
+    await api.delete(`/cuidador/${id}`);
+  },
+
+  // Verify document (admin only)
+  async verificarDocumento(id: number): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>(`/cuidador/${id}/verificar`);
+    return response.data;
   }
 };
 

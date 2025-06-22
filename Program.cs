@@ -47,6 +47,7 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // Add custom services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICuidadorService, CuidadorService>();
 
 var app = builder.Build();
 
