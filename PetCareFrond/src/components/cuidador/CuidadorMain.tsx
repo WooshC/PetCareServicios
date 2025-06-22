@@ -35,6 +35,9 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
   const [editLoading, setEditLoading] = useState(false);
   const [editMessage, setEditMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  // Estado del modal de logout
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   // ===== EFECTOS =====
 
   useEffect(() => {
@@ -92,6 +95,20 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
     setEditMessage(null);
   };
 
+  // ===== MANEJADORES DE LOGOUT =====
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    onLogout();
+  };
+
+  const handleLogoutClose = () => {
+    setShowLogoutModal(false);
+  };
+
   // ===== RENDERIZADO DE SECCIONES =====
 
   const renderSection = () => {
@@ -127,7 +144,7 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
         <CuidadorHeader
           currentSection={currentSection}
           onSectionChange={setCurrentSection}
-          onLogout={onLogout}
+          onLogout={handleLogoutClick}
           cuidadorName={cuidador?.nombreUsuario}
         />
         <div className="container mt-4">
@@ -147,7 +164,7 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
         <CuidadorHeader
           currentSection={currentSection}
           onSectionChange={setCurrentSection}
-          onLogout={onLogout}
+          onLogout={handleLogoutClick}
           cuidadorName={cuidador?.nombreUsuario}
         />
         <div className="container mt-4">
@@ -167,7 +184,7 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
       <CuidadorHeader
         currentSection={currentSection}
         onSectionChange={setCurrentSection}
-        onLogout={onLogout}
+        onLogout={handleLogoutClick}
         cuidadorName={cuidador?.nombreUsuario}
       />
       
@@ -212,6 +229,19 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
             />
           </div>
         }
+      />
+
+      {/* Modal de confirmación de logout */}
+      <Modal
+        isOpen={showLogoutModal}
+        onClose={handleLogoutClose}
+        onConfirm={handleLogoutConfirm}
+        title="Confirmar Cierre de Sesión"
+        message="¿Estás seguro de que quieres cerrar sesión? Se perderán todos los datos no guardados."
+        confirmText="Sí, Cerrar Sesión"
+        cancelText="Cancelar"
+        confirmVariant="danger"
+        className="logout-modal"
       />
     </div>
   );
