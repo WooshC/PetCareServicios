@@ -34,6 +34,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddDbContext<CuidadoresDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CuidadoresConnection")));
 
+// Configure SolicitudesDbContext (Base de datos de solicitudes)
+builder.Services.AddDbContext<SolicitudesDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SolicitudesConnection")));
+
+// Configure CalificacionesDbContext (Base de datos de calificaciones)
+builder.Services.AddDbContext<CalificacionesDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("CalificacionesConnection")));
+
 // Add Identity
 builder.Services.AddIdentity<User, UserRole>(options =>
 {
@@ -71,7 +79,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Apply migrations with retry logic for both databases
+// Apply migrations with retry logic for all databases
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -79,9 +87,11 @@ using (var scope = app.Services.CreateScope())
     
     try
     {
-        // Migrate authentication database
+        // Get all DbContexts
         var authDb = services.GetRequiredService<AppDbContext>();
         var cuidadoresDb = services.GetRequiredService<CuidadoresDbContext>();
+        var solicitudesDb = services.GetRequiredService<SolicitudesDbContext>();
+        var calificacionesDb = services.GetRequiredService<CalificacionesDbContext>();
         var maxAttempts = 5;
         
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
@@ -95,6 +105,14 @@ using (var scope = app.Services.CreateScope())
                 logger.LogInformation("Applying migrations to PetCareCuidadores database (attempt {Attempt})...", attempt);
                 cuidadoresDb.Database.Migrate();
                 logger.LogInformation("PetCareCuidadores migrations applied successfully");
+                
+                logger.LogInformation("Applying migrations to PetCareSolicitudes database (attempt {Attempt})...", attempt);
+                solicitudesDb.Database.Migrate();
+                logger.LogInformation("PetCareSolicitudes migrations applied successfully");
+                
+                logger.LogInformation("Applying migrations to PetCareCalificaciones database (attempt {Attempt})...", attempt);
+                calificacionesDb.Database.Migrate();
+                logger.LogInformation("PetCareCalificaciones migrations applied successfully");
                 
                 break;
             }
