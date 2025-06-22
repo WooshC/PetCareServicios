@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { cuidadorService } from '../../services/api';
 import { CuidadorResponse, CuidadorRequest } from '../../types/cuidador';
-import { cuidadorService, solicitudService } from '../../services/api';
 import CuidadorHeader from './CuidadorHeader';
 import CuidadorDashboard from './CuidadorDashboard';
 import SolicitudesSection from './SolicitudesSection';
+import SolicitudesActivasSection from './SolicitudesActivasSection';
 import HistorialSection from './HistorialSection';
-import Modal from '../Modal';
 import CuidadorForm from '../CuidadorForm';
+import Modal from '../Modal';
 import './CuidadorDashboard.css';
 
 interface CuidadorMainProps {
   onLogout: () => void;
 }
 
-type SectionType = 'dashboard' | 'solicitudes' | 'historial';
+type SectionType = 'dashboard' | 'solicitudes' | 'solicitudes-activas' | 'historial';
 
 const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
   // ===== ESTADOS PRINCIPALES =====
@@ -33,13 +34,14 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
   // Estados del modal de edición
   const [showEditModal, setShowEditModal] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
-  const [editMessage, setEditMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
 
   // Estado del modal de logout
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Estado del contador de solicitudes
   const [solicitudesCount, setSolicitudesCount] = useState(0);
+  const [solicitudesActivasCount, setSolicitudesActivasCount] = useState(0);
 
   // ===== EFECTOS =====
 
@@ -52,12 +54,10 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
   const loadCuidadorProfile = async () => {
     try {
       setLoading(true);
-      setError(null);
-      
       const profile = await cuidadorService.getMiPerfil();
       setCuidador(profile);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al cargar el perfil');
+    } catch (error) {
+      console.error('Error loading cuidador profile:', error);
     } finally {
       setLoading(false);
     }
@@ -66,23 +66,13 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
   const handleEditProfile = async (data: CuidadorRequest) => {
     try {
       setEditLoading(true);
-      setEditMessage(null);
+      setEditError(null);
       
       const updatedProfile = await cuidadorService.updateMiPerfil(data);
       setCuidador(updatedProfile);
-      
-      setEditMessage({ text: '¡Perfil actualizado exitosamente!', type: 'success' });
-      
-      setTimeout(() => {
-        setShowEditModal(false);
-        setEditMessage(null);
-      }, 1500);
-      
-    } catch (err: any) {
-      setEditMessage({ 
-        text: err.response?.data?.message || 'Error al actualizar el perfil', 
-        type: 'error' 
-      });
+      setShowEditModal(false);
+    } catch (error: any) {
+      setEditError(error.response?.data?.message || 'Error al actualizar el perfil');
     } finally {
       setEditLoading(false);
     }
@@ -90,12 +80,12 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
 
   const handleEditClick = () => {
     setShowEditModal(true);
-    setEditMessage(null);
+    setEditError(null);
   };
 
   const handleEditClose = () => {
     setShowEditModal(false);
-    setEditMessage(null);
+    setEditError(null);
   };
 
   // ===== MANEJADORES DE LOGOUT =====
@@ -117,6 +107,10 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
     setSolicitudesCount(count);
   };
 
+  const handleSolicitudesActivasCountChange = (count: number) => {
+    setSolicitudesActivasCount(count);
+  };
+
   // ===== RENDERIZADO DE SECCIONES =====
 
   const renderSection = () => {
@@ -133,6 +127,12 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
         return (
           <SolicitudesSection
             onSolicitudesCountChange={handleSolicitudesCountChange}
+          />
+        );
+      case 'solicitudes-activas':
+        return (
+          <SolicitudesActivasSection
+            onSolicitudesCountChange={handleSolicitudesActivasCountChange}
           />
         );
       case 'historial':
@@ -159,6 +159,7 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
           onLogout={handleLogoutClick}
           cuidadorName={cuidador?.nombreUsuario}
           solicitudesCount={solicitudesCount}
+          solicitudesActivasCount={solicitudesActivasCount}
         />
         <div className="container mt-4">
           <div className="d-flex justify-content-center">
@@ -180,6 +181,7 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
           onLogout={handleLogoutClick}
           cuidadorName={cuidador?.nombreUsuario}
           solicitudesCount={solicitudesCount}
+          solicitudesActivasCount={solicitudesActivasCount}
         />
         <div className="container mt-4">
           <div className="alert alert-danger" role="alert">
@@ -201,48 +203,37 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
         onLogout={handleLogoutClick}
         cuidadorName={cuidador?.nombreUsuario}
         solicitudesCount={solicitudesCount}
+        solicitudesActivasCount={solicitudesActivasCount}
       />
       
-      {renderSection()}
+      <div className="container-fluid mt-4">
+        {renderSection()}
+      </div>
 
       {/* Modal de edición de perfil */}
       <Modal
         isOpen={showEditModal}
         onClose={handleEditClose}
         onConfirm={() => {}}
-        title="Editar Perfil de Cuidador"
+        title="Editar Perfil"
         message=""
         confirmText=""
-        cancelText=""
-        confirmVariant="primary"
+        cancelText="Cerrar"
+        className="edit-profile-modal"
         customContent={
-          <div className="edit-profile-modal">
-            {editMessage && (
-              <div className={`alert alert-${editMessage.type === 'error' ? 'danger' : 'success'} alert-dismissible fade show mb-3`} role="alert">
-                {editMessage.text}
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => setEditMessage(null)}
-                  aria-label="Close"
-                ></button>
-              </div>
-            )}
-
-            <CuidadorForm
-              onSubmit={handleEditProfile}
-              loading={editLoading}
-              initialData={{
-                documentoIdentidad: cuidador?.documentoIdentidad || '',
-                telefonoEmergencia: cuidador?.telefonoEmergencia || '',
-                biografia: cuidador?.biografia || '',
-                experiencia: cuidador?.experiencia || '',
-                horarioAtencion: cuidador?.horarioAtencion || '',
-                tarifaPorHora: cuidador?.tarifaPorHora
-              }}
-              isEdit={true}
-            />
-          </div>
+          <CuidadorForm
+            onSubmit={handleEditProfile}
+            loading={editLoading}
+            initialData={cuidador ? {
+              documentoIdentidad: cuidador.documentoIdentidad,
+              telefonoEmergencia: cuidador.telefonoEmergencia,
+              biografia: cuidador.biografia,
+              experiencia: cuidador.experiencia,
+              horarioAtencion: cuidador.horarioAtencion,
+              tarifaPorHora: cuidador.tarifaPorHora
+            } : undefined}
+            isEdit={true}
+          />
         }
       />
 
@@ -252,7 +243,7 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
         onClose={handleLogoutClose}
         onConfirm={handleLogoutConfirm}
         title="Confirmar Cierre de Sesión"
-        message="¿Estás seguro de que quieres cerrar sesión? Se perderán todos los datos no guardados."
+        message="¿Estás seguro de que quieres cerrar sesión?"
         confirmText="Sí, Cerrar Sesión"
         cancelText="Cancelar"
         confirmVariant="danger"

@@ -532,8 +532,13 @@ export const solicitudService = {
    * @returns Promise con lista de solicitudes pendientes asignadas
    */
   async getMisSolicitudesPendientes(): Promise<any[]> {
-    const response = await api.get<any[]>('/solicitud/mis-pendientes');
-    return response.data;
+    try {
+      const response = await api.get('/solicitud/mis-pendientes');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching pending solicitudes:', error);
+      return [];
+    }
   },
 
   /**
@@ -596,6 +601,16 @@ export const solicitudService = {
       cuidadorID: cuidadorId
     });
     return response.data;
+  },
+
+  async getMisSolicitudesActivas(): Promise<any[]> {
+    try {
+      const response = await api.get('/solicitud/mis-activas');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching active solicitudes:', error);
+      return [];
+    }
   }
 };
 

@@ -156,6 +156,17 @@ namespace PetCareServicios.Services
             return await MapToResponseList(solicitudes);
         }
 
+        public async Task<List<SolicitudResponse>> GetSolicitudesActivasByCuidadorAsync(int cuidadorId)
+        {
+            var solicitudes = await _solicitudesContext.Solicitudes
+                .Where(s => s.CuidadorID == cuidadorId && 
+                           (s.Estado == "Aceptada" || s.Estado == "Fuera de Tiempo" || s.Estado == "En Progreso"))
+                .OrderByDescending(s => s.FechaCreacion)
+                .ToListAsync();
+
+            return await MapToResponseList(solicitudes);
+        }
+
         public async Task<SolicitudResponse?> AceptarSolicitudAsync(int solicitudId, int cuidadorId)
         {
             var solicitud = await _solicitudesContext.Solicitudes

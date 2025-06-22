@@ -264,6 +264,26 @@ namespace PetCareServicios.Controllers
         }
 
         /// <summary>
+        /// Obtiene las solicitudes activas del cuidador autenticado
+        /// FLUJO:
+        /// 1. Extrae el ID del usuario del token JWT
+        /// 2. Busca el perfil de cuidador asociado
+        /// 3. Retorna las solicitudes activas (Aceptada, Fuera de Tiempo, En Progreso) del cuidador
+        /// </summary>
+        /// <returns>Lista de solicitudes activas</returns>
+        [HttpGet("mis-activas")]
+        [Authorize(Roles = "Cuidador")]
+        public async Task<ActionResult<List<SolicitudResponse>>> GetMisSolicitudesActivas()
+        {
+            var cuidadorId = await GetCurrentCuidadorId();
+            if (cuidadorId == null)
+                return Unauthorized("No tienes un perfil de cuidador");
+
+            var solicitudes = await _solicitudService.GetSolicitudesActivasByCuidadorAsync(cuidadorId.Value);
+            return Ok(solicitudes);
+        }
+
+        /// <summary>
         /// Acepta una solicitud pendiente
         /// FLUJO:
         /// 1. Extrae el ID del usuario del token JWT

@@ -1,11 +1,12 @@
 import React from 'react';
 
 interface CuidadorHeaderProps {
-  currentSection: 'dashboard' | 'solicitudes' | 'historial';
-  onSectionChange: (section: 'dashboard' | 'solicitudes' | 'historial') => void;
+  currentSection: 'dashboard' | 'solicitudes' | 'solicitudes-activas' | 'historial';
+  onSectionChange: (section: 'dashboard' | 'solicitudes' | 'solicitudes-activas' | 'historial') => void;
   onLogout: () => void;
   cuidadorName?: string;
   solicitudesCount?: number;
+  solicitudesActivasCount?: number;
 }
 
 const CuidadorHeader: React.FC<CuidadorHeaderProps> = ({
@@ -13,7 +14,8 @@ const CuidadorHeader: React.FC<CuidadorHeaderProps> = ({
   onSectionChange,
   onLogout,
   cuidadorName = 'Cuidador',
-  solicitudesCount = 0
+  solicitudesCount = 0,
+  solicitudesActivasCount = 0
 }) => {
   return (
     <header className="cuidador-header">
@@ -52,13 +54,25 @@ const CuidadorHeader: React.FC<CuidadorHeaderProps> = ({
               </li>
               <li className="nav-item">
                 <button
-                  className={`nav-link btn btn-link ${currentSection === 'solicitudes' ? 'active fw-bold' : ''}`}
+                  className={`nav-link btn btn-link position-relative ${currentSection === 'solicitudes' ? 'active fw-bold' : ''}`}
                   onClick={() => onSectionChange('solicitudes')}
                 >
                   <i className="bi bi-bell me-1"></i>
                   Solicitudes
                   {solicitudesCount > 0 && (
-                    <span className="badge bg-danger ms-1">{solicitudesCount}</span>
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger ms-1">{solicitudesCount}</span>
+                  )}
+                </button>
+              </li>
+              <li className="nav-item">
+                <button
+                  className={`nav-link btn btn-link position-relative ${currentSection === 'solicitudes-activas' ? 'active fw-bold' : ''}`}
+                  onClick={() => onSectionChange('solicitudes-activas')}
+                >
+                  <i className="bi bi-check-circle me-1"></i>
+                  Solicitudes Activas
+                  {solicitudesActivasCount > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success ms-1">{solicitudesActivasCount}</span>
                   )}
                 </button>
               </li>
