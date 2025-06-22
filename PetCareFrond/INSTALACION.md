@@ -1,6 +1,36 @@
 # 📦 Instalación del Frontend PetCare
 
-## ⚠️ Problema de PowerShell
+## ✅ Estado Actual
+
+**¡El frontend ya está funcionando correctamente!** 
+
+- ✅ **CORS Configurado** - Comunicación con API Docker
+- ✅ **Login Funcionando** - Autenticación JWT operativa
+- ✅ **Register Funcionando** - Registro de usuarios operativo
+- ✅ **Docker Backend** - API ejecutándose en contenedores
+
+## 🚀 Configuración Recomendada
+
+### Backend con Docker + Frontend Manual
+
+```bash
+# 1. Desplegar backend y base de datos
+docker-compose up -d
+
+# 2. Verificar API
+curl http://localhost:5000/api/auth/health
+
+# 3. Ejecutar frontend
+cd PetCareFrond
+npm install
+npm run dev
+
+# 4. Acceder a la aplicación
+# Frontend: http://localhost:3000
+# API: http://localhost:5000
+```
+
+## ⚠️ Problema de PowerShell (Resuelto)
 
 Si ves el error:
 ```
@@ -71,12 +101,14 @@ Para verificar que todo funciona:
 3. ✅ Formulario de login visible
 4. ✅ Posibilidad de cambiar a registro
 5. ✅ Conexión exitosa con la API
+6. ✅ Login y registro funcionando
 
 ## 🐛 Si hay problemas
 
 ### Error de CORS
+- ✅ **Resuelto**: CORS configurado en backend
 - Verifica que la API esté en `http://localhost:5000`
-- Revisa el proxy en `vite.config.ts`
+- Verifica que los contenedores estén ejecutándose: `docker ps`
 
 ### Error de módulos
 - Elimina `node_modules` y `package-lock.json`
@@ -86,6 +118,49 @@ Para verificar que todo funciona:
 - Cambia el puerto en `vite.config.ts`
 - O mata el proceso que usa el puerto 3000
 
+### Error de conexión con API
+```bash
+# Verificar contenedores
+docker ps
+
+# Ver logs del backend
+docker-compose logs petcare-api
+
+# Reconstruir si es necesario
+docker-compose down
+docker-compose up --build -d
+```
+
+## 🔄 Comandos Útiles
+
+### Desarrollo
+```bash
+# Ejecutar frontend
+npm run dev
+
+# Build de producción
+npm run build
+
+# Previsualizar build
+npm run preview
+
+# Linter
+npm run lint
+```
+
+### Docker
+```bash
+# Verificar contenedores
+docker ps
+
+# Ver logs
+docker-compose logs -f petcare-api
+
+# Reconstruir backend
+docker-compose down
+docker-compose up --build -d
+```
+
 ---
 
-¡El frontend está listo para usar! 🎉 
+¡El frontend está funcionando perfectamente! 🎉 
