@@ -346,9 +346,9 @@ namespace PetCareServicios.Services
             if (cuidador == null)
                 return null;
 
-            // Asignar el cuidador a la solicitud
+            // Asignar el cuidador a la solicitud (mantener estado "Pendiente")
             solicitud.CuidadorID = cuidadorId;
-            solicitud.Estado = "Asignada";
+            // No cambiar el estado - se mantiene "Pendiente" hasta que el cuidador la acepte
             solicitud.FechaActualizacion = DateTime.UtcNow;
 
             await _solicitudesContext.SaveChangesAsync();
@@ -392,11 +392,19 @@ namespace PetCareServicios.Services
             // Obtener información del cuidador
             if (solicitud.CuidadorID.HasValue)
             {
-                var cuidador = await _authContext.Users.FindAsync(solicitud.CuidadorID.Value);
-                if (cuidador != null)
+                // Primero buscar el perfil de cuidador
+                var perfilCuidador = await _cuidadoresContext.Cuidadores
+                    .FirstOrDefaultAsync(c => c.CuidadorID == solicitud.CuidadorID.Value);
+                
+                if (perfilCuidador != null)
                 {
-                    response.NombreCuidador = cuidador.Name;
-                    response.EmailCuidador = cuidador.Email ?? string.Empty;
+                    // Luego buscar la información del usuario asociado
+                    var cuidador = await _authContext.Users.FindAsync(perfilCuidador.UsuarioID);
+                    if (cuidador != null)
+                    {
+                        response.NombreCuidador = cuidador.Name;
+                        response.EmailCuidador = cuidador.Email ?? string.Empty;
+                    }
                 }
             }
 
