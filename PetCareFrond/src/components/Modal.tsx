@@ -10,6 +10,7 @@ interface ModalProps {
   cancelText?: string;
   confirmVariant?: 'primary' | 'danger' | 'warning' | 'success';
   customContent?: React.ReactNode;
+  className?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -21,7 +22,8 @@ const Modal: React.FC<ModalProps> = ({
   confirmText = 'Confirmar',
   cancelText = 'Cancelar',
   confirmVariant = 'primary',
-  customContent
+  customContent,
+  className = ''
 }) => {
   if (!isOpen) return null;
 
@@ -45,7 +47,7 @@ const Modal: React.FC<ModalProps> = ({
       aria-labelledby="modalTitle"
       aria-hidden="true"
     >
-      <div className="modal-dialog modal-dialog-centered modal-lg">
+      <div className={`modal-dialog modal-dialog-centered ${className}`}>
         <div className="modal-content border-0 shadow-lg">
           <div className="modal-header border-0 pb-0">
             <h5 className="modal-title fw-bold" id="modalTitle">
@@ -63,7 +65,7 @@ const Modal: React.FC<ModalProps> = ({
             {customContent ? (
               customContent
             ) : (
-              <p className="text-muted mb-0">{message}</p>
+              <p className="text-muted mb-0 modal-message">{message}</p>
             )}
           </div>
           {!customContent && (

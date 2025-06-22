@@ -230,8 +230,8 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
       <div className="container mt-4">
         {/* ===== HEADER CON BOTÓN DE LOGOUT ===== */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="h3 mb-0">
-            <i className="bi bi-heart text-primary"></i> Dashboard de Cuidador
+          <h1 className="h3 mb-0 dashboard-title">
+            <i className="bi bi-heart"></i> Dashboard de Cuidador
           </h1>
           <button 
             onClick={handleLogoutClick}
@@ -520,6 +520,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
         confirmText="Sí, Cerrar Sesión"
         cancelText="Cancelar"
         confirmVariant="danger"
+        className="logout-modal"
       />
 
       {/* Modal de edición de perfil */}
