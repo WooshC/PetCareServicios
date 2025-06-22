@@ -12,8 +12,8 @@ using PetCareServicios.Data;
 namespace PetCareServicios.Migrations.Cuidadores
 {
     [DbContext(typeof(CuidadoresDbContext))]
-    [Migration("20250622045047_RemoveForeignKeyFromCuidador")]
-    partial class RemoveForeignKeyFromCuidador
+    [Migration("20250622053016_InitialCuidadores")]
+    partial class InitialCuidadores
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace PetCareServicios.Migrations.Cuidadores
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("PetCareServicios.Models.Auth.Cuidador", b =>
+            modelBuilder.Entity("PetCareServicios.Models.Cuidadores.Cuidador", b =>
                 {
                     b.Property<int>("CuidadorID")
                         .ValueGeneratedOnAdd()

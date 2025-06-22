@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PetCareServicios.Models.Auth;
+using PetCareServicios.Models.Cuidadores;
 
 namespace PetCareServicios.Data
 {

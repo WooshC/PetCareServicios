@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace PetCareServicios.Migrations
+namespace PetCareServicios.Migrations.Auth
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialAuth : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

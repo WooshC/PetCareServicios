@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace PetCareServicios.Models.Auth
+namespace PetCareServicios.Models.Cuidadores
 {
     public class Cuidador
     {

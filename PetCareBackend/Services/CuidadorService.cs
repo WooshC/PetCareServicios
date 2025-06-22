@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PetCareServicios.Data;
 using PetCareServicios.Models.Auth;
+using PetCareServicios.Models.Cuidadores;
 using PetCareServicios.Services.Interfaces;
 
 namespace PetCareServicios.Services
