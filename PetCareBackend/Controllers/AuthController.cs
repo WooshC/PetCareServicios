@@ -1,34 +1,86 @@
 using Microsoft.AspNetCore.Mvc;
 using PetCareServicios.Models.Auth;
 using PetCareServicios.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace PetCareServicios.Controllers
 {
+    /// <summary>
+    /// Controlador para manejar autenticación y registro de usuarios
+    /// Gestiona login, registro y asignación de roles
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<UserRole> _roleManager;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, UserManager<User> userManager, RoleManager<UserRole> roleManager)
         {
             _authService = authService;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
+        /// <summary>
+        /// Inicia sesión de un usuario con validación de rol
+        /// FLUJO:
+        /// 1. Recibe credenciales y rol solicitado
+        /// 2. Valida credenciales usando AuthService
+        /// 3. Verifica que el usuario tenga el rol correcto
+        /// 4. Retorna token JWT si todo es válido
+        /// </summary>
+        /// <param name="request">Credenciales y rol del usuario</param>
+        /// <returns>Token JWT y mensaje de estado</returns>
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequestWithRole request)
         {
-            var response = await _authService.LoginAsync(request);
+            // Paso 1: Validar credenciales usando el servicio de autenticación
+            var response = await _authService.LoginAsync(new LoginRequest 
+            { 
+                Email = request.Email, 
+                Password = request.Password 
+            });
             
+            // Si las credenciales son inválidas, retornar error
             if (!response.Success)
                 return BadRequest(response);
+
+            // Paso 2: Verificar que el usuario tenga el rol correcto
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user != null)
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+                if (!userRoles.Contains(request.Role))
+                {
+                    return BadRequest(new AuthResponse 
+                    { 
+                        Success = false, 
+                        Message = $"El usuario no tiene el rol {request.Role}" 
+                    });
+                }
+            }
                 
+            // Paso 3: Retornar respuesta exitosa con token
             return Ok(response);
         }
 
+        /// <summary>
+        /// Registra un nuevo usuario con asignación de rol
+        /// FLUJO:
+        /// 1. Crea el usuario usando AuthService
+        /// 2. Crea el rol si no existe
+        /// 3. Asigna el rol al usuario
+        /// 4. Retorna token JWT
+        /// </summary>
+        /// <param name="request">Datos del usuario y rol</param>
+        /// <returns>Token JWT y mensaje de estado</returns>
         [HttpPost("register")]
-        public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest request)
+        public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequestWithRole request)
         {
+            // Paso 1: Crear objeto usuario con datos básicos
             var user = new User
             {
                 UserName = request.Email,
@@ -37,14 +89,31 @@ namespace PetCareServicios.Controllers
                 CreatedAt = DateTime.UtcNow
             };
 
+            // Paso 2: Registrar usuario usando el servicio de autenticación
             var response = await _authService.RegisterAsync(user, request.Password);
             
+            // Si hay error en el registro, retornar error
             if (!response.Success)
                 return BadRequest(response);
+
+            // Paso 3: Crear rol si no existe
+            if (!await _roleManager.RoleExistsAsync(request.Role))
+            {
+                await _roleManager.CreateAsync(new UserRole { Name = request.Role });
+            }
+
+            // Paso 4: Asignar rol al usuario
+            await _userManager.AddToRoleAsync(user, request.Role);
                 
+            // Paso 5: Retornar respuesta exitosa con token
             return Ok(response);
         }
 
+        /// <summary>
+        /// Endpoint de salud para verificar que la API esté funcionando
+        /// Útil para testing y monitoreo
+        /// </summary>
+        /// <returns>Mensaje de estado</returns>
         [HttpGet("health")]
         public ActionResult<string> Health()
         {
@@ -52,10 +121,26 @@ namespace PetCareServicios.Controllers
         }
     }
 
-    public class RegisterRequest
+    /// <summary>
+    /// DTO para login con rol específico
+    /// Extiende LoginRequest básico agregando el campo Role
+    /// </summary>
+    public class LoginRequestWithRole
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// DTO para registro con rol específico
+    /// Extiende RegisterRequest básico agregando el campo Role
+    /// </summary>
+    public class RegisterRequestWithRole
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
     }
 } 

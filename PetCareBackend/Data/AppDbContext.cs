@@ -4,6 +4,9 @@ using PetCareServicios.Models.Auth;
 
 namespace PetCareServicios.Data
 {
+    /// <summary>
+    /// Contexto de base de datos para autenticación y usuarios
+    /// </summary>
     public class AppDbContext : IdentityDbContext<User, UserRole, int>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
