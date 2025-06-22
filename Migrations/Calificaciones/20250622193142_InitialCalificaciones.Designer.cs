@@ -12,7 +12,7 @@ using PetCareServicios.Data;
 namespace PetCareServicios.Migrations.Calificaciones
 {
     [DbContext(typeof(CalificacionesDbContext))]
-    [Migration("20250622175144_InitialCalificaciones")]
+    [Migration("20250622193142_InitialCalificaciones")]
     partial class InitialCalificaciones
     {
         /// <inheritdoc />

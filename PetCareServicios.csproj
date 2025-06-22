@@ -7,6 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\Clientes\**" />
+    <Compile Remove="Migrations\Solicitudes\**" />
+    <Content Remove="Migrations\Clientes\**" />
+    <Content Remove="Migrations\Solicitudes\**" />
+    <EmbeddedResource Remove="Migrations\Clientes\**" />
+    <EmbeddedResource Remove="Migrations\Solicitudes\**" />
+    <None Remove="Migrations\Clientes\**" />
+    <None Remove="Migrations\Solicitudes\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.4" />
@@ -20,7 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
+    <Folder Include="Migrations\Auth\" />
+    <Folder Include="Migrations\Cuidadores\" />
+    <Folder Include="Migrations\Calificaciones\" />
     <Folder Include="PetCareBackend\Models\" />
     <Folder Include="PetCareFrond\" />
     <Folder Include="PetCareBackend\Services\" />

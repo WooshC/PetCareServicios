@@ -19,9 +19,12 @@ namespace PetCareServicios.Migrations.Clientes
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UsuarioID = table.Column<int>(type: "int", nullable: false),
                     DocumentoIdentidad = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    DocumentoIdentidadArchivo = table.Column<byte[]>(type: "VARBINARY(MAX)", nullable: true),
+                    TelefonoEmergencia = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
                     DocumentoVerificado = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    FechaVerificacion = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    FechaVerificacion = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Estado = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "Activo"),
+                    FechaCreacion = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    FechaActualizacion = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -31,10 +34,11 @@ namespace PetCareServicios.Migrations.Clientes
             migrationBuilder.CreateIndex(
                 name: "IX_Clientes_DocumentoIdentidad",
                 table: "Clientes",
-                column: "DocumentoIdentidad");
+                column: "DocumentoIdentidad",
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "UQ_Cliente_Usuario",
+                name: "IX_Clientes_UsuarioID",
                 table: "Clientes",
                 column: "UsuarioID",
                 unique: true);

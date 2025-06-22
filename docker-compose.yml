@@ -5,10 +5,14 @@ services:
       - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Database=PetCareAuth;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - ConnectionStrings__AuthConnection=Server=db;Database=PetCareAuth;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
       - ConnectionStrings__CuidadoresConnection=Server=db;Database=PetCareCuidadores;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - ConnectionStrings__ClientesConnection=Server=db;Database=PetCareClientes;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - ConnectionStrings__SolicitudesConnection=Server=db;Database=PetCareSolicitudes;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - ConnectionStrings__CalificacionesConnection=Server=db;Database=PetCareCalificaciones;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
     depends_on:
       - db
+    restart: unless-stopped
 
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -20,6 +24,7 @@ services:
       - "14433:1433"
     volumes:
       - sql_data:/var/opt/mssql
+    restart: unless-stopped
 
 volumes:
   sql_data:

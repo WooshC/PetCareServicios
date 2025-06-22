@@ -12,7 +12,7 @@ using PetCareServicios.Data;
 namespace PetCareServicios.Migrations.Solicitudes
 {
     [DbContext(typeof(SolicitudesDbContext))]
-    [Migration("20250622174942_InitialSolicitudes")]
+    [Migration("20250622194438_InitialSolicitudes")]
     partial class InitialSolicitudes
     {
         /// <inheritdoc />
@@ -33,10 +33,10 @@ namespace PetCareServicios.Migrations.Solicitudes
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SolicitudID"));
 
-                    b.Property<int>("ClienteID")
+                    b.Property<int?>("ClienteID")
                         .HasColumnType("int");
 
-                    b.Property<int>("CuidadorID")
+                    b.Property<int?>("CuidadorID")
                         .HasColumnType("int");
 
                     b.Property<string>("Descripcion")

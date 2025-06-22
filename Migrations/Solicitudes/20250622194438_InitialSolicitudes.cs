@@ -17,8 +17,8 @@ namespace PetCareServicios.Migrations.Solicitudes
                 {
                     SolicitudID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ClienteID = table.Column<int>(type: "int", nullable: false),
-                    CuidadorID = table.Column<int>(type: "int", nullable: false),
+                    ClienteID = table.Column<int>(type: "int", nullable: true),
+                    CuidadorID = table.Column<int>(type: "int", nullable: true),
                     TipoServicio = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Descripcion = table.Column<string>(type: "TEXT", nullable: false),
                     FechaHoraInicio = table.Column<DateTime>(type: "datetime2", nullable: false),

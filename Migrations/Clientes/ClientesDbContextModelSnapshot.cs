@@ -35,16 +35,33 @@ namespace PetCareServicios.Migrations.Clientes
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<byte[]>("DocumentoIdentidadArchivo")
-                        .HasColumnType("VARBINARY(MAX)");
-
                     b.Property<bool>("DocumentoVerificado")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Activo");
+
+                    b.Property<DateTime?>("FechaActualizacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
                     b.Property<DateTime?>("FechaVerificacion")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("TelefonoEmergencia")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
 
                     b.Property<int>("UsuarioID")
                         .HasColumnType("int");
@@ -52,11 +69,10 @@ namespace PetCareServicios.Migrations.Clientes
                     b.HasKey("ClienteID");
 
                     b.HasIndex("DocumentoIdentidad")
-                        .HasDatabaseName("IX_Clientes_DocumentoIdentidad");
+                        .IsUnique();
 
                     b.HasIndex("UsuarioID")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_Cliente_Usuario");
+                        .IsUnique();
 
                     b.ToTable("Clientes");
                 });
