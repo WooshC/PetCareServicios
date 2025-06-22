@@ -5,13 +5,15 @@ interface CuidadorHeaderProps {
   onSectionChange: (section: 'dashboard' | 'solicitudes' | 'historial') => void;
   onLogout: () => void;
   cuidadorName?: string;
+  solicitudesCount?: number;
 }
 
 const CuidadorHeader: React.FC<CuidadorHeaderProps> = ({
   currentSection,
   onSectionChange,
   onLogout,
-  cuidadorName = 'Cuidador'
+  cuidadorName = 'Cuidador',
+  solicitudesCount = 0
 }) => {
   return (
     <header className="cuidador-header">
@@ -55,7 +57,9 @@ const CuidadorHeader: React.FC<CuidadorHeaderProps> = ({
                 >
                   <i className="bi bi-bell me-1"></i>
                   Solicitudes
-                  <span className="badge bg-danger ms-1">0</span>
+                  {solicitudesCount > 0 && (
+                    <span className="badge bg-danger ms-1">{solicitudesCount}</span>
+                  )}
                 </button>
               </li>
               <li className="nav-item">

@@ -21,6 +21,7 @@ namespace PetCareServicios.Services.Interfaces
         // ===== OPERACIONES PARA CUIDADORES =====
         Task<List<SolicitudResponse>> GetSolicitudesByCuidadorAsync(int cuidadorId);
         Task<List<SolicitudResponse>> GetSolicitudesPendientesAsync();
+        Task<List<SolicitudResponse>> GetSolicitudesPendientesByCuidadorAsync(int cuidadorId);
         Task<SolicitudResponse?> AceptarSolicitudAsync(int solicitudId, int cuidadorId);
         Task<SolicitudResponse?> RechazarSolicitudAsync(int solicitudId, int cuidadorId);
         Task<SolicitudResponse?> IniciarServicioAsync(int solicitudId, int cuidadorId);

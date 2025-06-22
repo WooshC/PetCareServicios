@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CuidadorResponse, CuidadorRequest } from '../../types/cuidador';
-import { cuidadorService } from '../../services/api';
+import { cuidadorService, solicitudService } from '../../services/api';
 import CuidadorHeader from './CuidadorHeader';
 import CuidadorDashboard from './CuidadorDashboard';
 import SolicitudesSection from './SolicitudesSection';
@@ -37,6 +37,9 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
 
   // Estado del modal de logout
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Estado del contador de solicitudes
+  const [solicitudesCount, setSolicitudesCount] = useState(0);
 
   // ===== EFECTOS =====
 
@@ -109,6 +112,11 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
     setShowLogoutModal(false);
   };
 
+  // Manejar cambio en el contador de solicitudes
+  const handleSolicitudesCountChange = (count: number) => {
+    setSolicitudesCount(count);
+  };
+
   // ===== RENDERIZADO DE SECCIONES =====
 
   const renderSection = () => {
@@ -122,7 +130,11 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
           />
         );
       case 'solicitudes':
-        return <SolicitudesSection />;
+        return (
+          <SolicitudesSection
+            onSolicitudesCountChange={handleSolicitudesCountChange}
+          />
+        );
       case 'historial':
         return <HistorialSection />;
       default:
@@ -146,6 +158,7 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
           onSectionChange={setCurrentSection}
           onLogout={handleLogoutClick}
           cuidadorName={cuidador?.nombreUsuario}
+          solicitudesCount={solicitudesCount}
         />
         <div className="container mt-4">
           <div className="d-flex justify-content-center">
@@ -166,6 +179,7 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
           onSectionChange={setCurrentSection}
           onLogout={handleLogoutClick}
           cuidadorName={cuidador?.nombreUsuario}
+          solicitudesCount={solicitudesCount}
         />
         <div className="container mt-4">
           <div className="alert alert-danger" role="alert">
@@ -186,6 +200,7 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
         onSectionChange={setCurrentSection}
         onLogout={handleLogoutClick}
         cuidadorName={cuidador?.nombreUsuario}
+        solicitudesCount={solicitudesCount}
       />
       
       {renderSection()}

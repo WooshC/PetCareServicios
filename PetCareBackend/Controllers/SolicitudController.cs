@@ -244,15 +244,22 @@ namespace PetCareServicios.Controllers
         }
 
         /// <summary>
-        /// Obtiene las solicitudes pendientes disponibles
-        /// Solo para cuidadores
+        /// Obtiene las solicitudes pendientes asignadas al cuidador autenticado
+        /// FLUJO:
+        /// 1. Extrae el ID del usuario del token JWT
+        /// 2. Busca el perfil de cuidador asociado
+        /// 3. Retorna las solicitudes pendientes asignadas al cuidador
         /// </summary>
-        /// <returns>Lista de solicitudes pendientes</returns>
-        [HttpGet("pendientes")]
+        /// <returns>Lista de solicitudes pendientes asignadas</returns>
+        [HttpGet("mis-pendientes")]
         [Authorize(Roles = "Cuidador")]
-        public async Task<ActionResult<List<SolicitudResponse>>> GetSolicitudesPendientes()
+        public async Task<ActionResult<List<SolicitudResponse>>> GetMisSolicitudesPendientes()
         {
-            var solicitudes = await _solicitudService.GetSolicitudesPendientesAsync();
+            var cuidadorId = await GetCurrentCuidadorId();
+            if (cuidadorId == null)
+                return Unauthorized("No tienes un perfil de cuidador");
+
+            var solicitudes = await _solicitudService.GetSolicitudesPendientesByCuidadorAsync(cuidadorId.Value);
             return Ok(solicitudes);
         }
 

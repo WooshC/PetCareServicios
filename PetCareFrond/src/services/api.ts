@@ -523,10 +523,28 @@ export const solicitudService = {
   },
 
   /**
-   * Acepta una solicitud pendiente
+   * Obtiene las solicitudes pendientes asignadas al cuidador autenticado
+   * FLUJO:
+   * 1. Usa el token JWT para identificar al cuidador
+   * 2. Retorna las solicitudes pendientes asignadas al cuidador
+   * 3. Útil para mostrar solicitudes que esperan respuesta
    * 
-   * @param id - ID de la solicitud
-   * @returns Promise con solicitud aceptada
+   * @returns Promise con lista de solicitudes pendientes asignadas
+   */
+  async getMisSolicitudesPendientes(): Promise<any[]> {
+    const response = await api.get<any[]>('/solicitud/mis-pendientes');
+    return response.data;
+  },
+
+  /**
+   * Acepta una solicitud pendiente
+   * FLUJO:
+   * 1. Usa el token JWT para identificar al cuidador
+   * 2. Cambia el estado de la solicitud a "Aceptada"
+   * 3. Asigna la solicitud al cuidador autenticado
+   * 
+   * @param id ID de la solicitud a aceptar
+   * @returns Promise con la solicitud aceptada
    */
   async aceptarSolicitud(id: number): Promise<any> {
     const response = await api.post<any>(`/solicitud/${id}/aceptar`);
