@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PetCareServicios.Models.Auth;
+using PetCareServicios.Models.Cuidadores;
 using PetCareServicios.Services.Interfaces;
 using System.Security.Claims;
 

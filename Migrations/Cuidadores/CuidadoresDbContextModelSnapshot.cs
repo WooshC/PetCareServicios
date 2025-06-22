@@ -22,7 +22,7 @@ namespace PetCareServicios.Migrations.Cuidadores
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("PetCareServicios.Models.Auth.Cuidador", b =>
+            modelBuilder.Entity("PetCareServicios.Models.Cuidadores.Cuidador", b =>
                 {
                     b.Property<int>("CuidadorID")
                         .ValueGeneratedOnAdd()

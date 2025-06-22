@@ -44,12 +44,12 @@ namespace PetCareServicios.Services
 
         public async Task<AuthResponse> RegisterAsync(User user, string password)
         {
-            if (await _userManager.FindByEmailAsync(user.Email) != null)
+            if (string.IsNullOrEmpty(user.Email) || await _userManager.FindByEmailAsync(user.Email) != null)
             {
                 return new AuthResponse 
                 { 
                     Success = false, 
-                    Message = "El email ya está registrado" 
+                    Message = "El email ya está registrado o es inválido" 
                 };
             }
 

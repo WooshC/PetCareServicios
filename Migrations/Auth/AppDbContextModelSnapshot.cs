@@ -8,7 +8,7 @@ using PetCareServicios.Data;
 
 #nullable disable
 
-namespace PetCareServicios.Migrations
+namespace PetCareServicios.Migrations.Auth
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -123,66 +123,6 @@ namespace PetCareServicios.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("PetCareServicios.Models.Auth.Cuidador", b =>
-                {
-                    b.Property<int>("CuidadorID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CuidadorID"));
-
-                    b.Property<string>("Biografia")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("CalificacionPromedio")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("DECIMAL(3,2)")
-                        .HasDefaultValue(0.0m);
-
-                    b.Property<string>("DocumentoIdentidad")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<bool>("DocumentoVerificado")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Experiencia")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<DateTime?>("FechaVerificacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("HorarioAtencion")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal?>("TarifaPorHora")
-                        .HasColumnType("DECIMAL(10,2)");
-
-                    b.Property<string>("TelefonoEmergencia")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<int>("UsuarioID")
-                        .HasColumnType("int");
-
-                    b.HasKey("CuidadorID");
-
-                    b.HasIndex("UsuarioID")
-                        .IsUnique();
-
-                    b.ToTable("Cuidadores");
                 });
 
             modelBuilder.Entity("PetCareServicios.Models.Auth.User", b =>
@@ -347,17 +287,6 @@ namespace PetCareServicios.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("PetCareServicios.Models.Auth.Cuidador", b =>
-                {
-                    b.HasOne("PetCareServicios.Models.Auth.User", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Usuario");
                 });
 #pragma warning restore 612, 618
         }

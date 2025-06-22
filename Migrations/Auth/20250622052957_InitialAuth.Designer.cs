@@ -9,11 +9,11 @@ using PetCareServicios.Data;
 
 #nullable disable
 
-namespace PetCareServicios.Migrations
+namespace PetCareServicios.Migrations.Auth
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250621164718_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250622052957_InitialAuth")]
+    partial class InitialAuth
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
