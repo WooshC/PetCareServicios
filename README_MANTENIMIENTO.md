@@ -16,7 +16,7 @@
 ### Stack Tecnológico
 - **Frontend**: React 18 + TypeScript + Vite + Bootstrap 5
 - **Backend**: .NET 8 + Entity Framework + ASP.NET Identity
-- **Base de Datos**: SQL Server
+- **Base de Datos**: SQL Server (dos bases separadas)
 - **Autenticación**: JWT Tokens
 - **Contenedores**: Docker + Docker Compose
 
@@ -28,6 +28,17 @@ Frontend (React) ←→ API (.NET) ←→ Base de Datos (SQL Server)
   Services           Services             Migrations
   Types              Models               Identity
 ```
+
+### Base de Datos Separada
+El sistema utiliza **dos bases de datos separadas** para mejor organización:
+
+1. **PetCareAuth** - Autenticación y usuarios
+   - `AspNetUsers` - Usuarios del sistema
+   - `AspNetRoles` - Roles disponibles
+   - `AspNetUserRoles` - Asignación de roles
+
+2. **PetCareCuidadores** - Gestión de cuidadores
+   - `Cuidadores` - Perfiles de cuidadores
 
 ---
 
@@ -140,14 +151,18 @@ Services/              # Lógica de negocio
 
 Models/                # Modelos de datos
 ├── Auth/              # Modelos de autenticación
-│   ├── User.cs        # Usuario
+│   ├── User.cs        # Usuario (Identity)
 │   ├── UserRole.cs    # Rol de usuario
+│   ├── LoginRequest.cs # Solicitud de login
+│   └── AuthResponse.cs # Respuesta de autenticación
+├── Cuidadores/        # Modelos de cuidadores
 │   ├── Cuidador.cs    # Entidad cuidador
-│   └── ...
+│   └── CuidadorRequest.cs # DTOs
 └── AppSettings.cs     # Configuraciones
 
 Data/                  # Acceso a datos
-└── AppDbContext.cs    # Contexto de Entity Framework
+├── AppDbContext.cs    # Contexto de autenticación
+└── CuidadoresDbContext.cs # Contexto de cuidadores
 
 Middleware/            # Middleware personalizado
 └── JwtMiddleware.cs   # Configuración JWT
@@ -192,7 +207,7 @@ authService.removeToken();          // Eliminar token
 #### Archivos Clave:
 - `PetCareBackend/Controllers/CuidadorController.cs`
 - `PetCareBackend/Services/CuidadorService.cs`
-- `PetCareBackend/Models/Auth/Cuidador.cs`
+- `PetCareBackend/Models/Cuidadores/Cuidador.cs`
 - `PetCareFrond/src/components/cuidador/CuidadorDashboard.tsx`
 
 #### Funciones Principales:
@@ -202,53 +217,44 @@ await _cuidadorService.CreateCuidadorAsync(usuarioId, request);
 await _cuidadorService.GetCuidadorByUsuarioIdAsync(usuarioId);
 await _cuidadorService.UpdateCuidadorAsync(cuidadorId, request);
 
-// Frontend - Servicios API
-cuidadorService.createCuidador(data);
-cuidadorService.getMiPerfil();
-cuidadorService.updateMiPerfil(data);
+// Frontend - Servicios de API
+await cuidadorService.createCuidador(data);
+await cuidadorService.getMiPerfil();
+await cuidadorService.updateMiPerfil(data);
 ```
 
 #### Modificaciones Comunes:
-- Agregar nuevos campos al perfil
-- Modificar validaciones
-- Agregar nuevas funcionalidades
+- Agregar nuevos campos al perfil de cuidador
+- Modificar validaciones de datos
 - Cambiar lógica de verificación
+- Agregar nuevas funcionalidades al dashboard
 
 ### 3. Base de Datos
 
 #### Archivos Clave:
 - `PetCareBackend/Data/AppDbContext.cs`
-- `Migrations/` (carpeta de migraciones)
-- `appsettings.json`
+- `PetCareBackend/Data/CuidadoresDbContext.cs`
+- `Migrations/Auth/`
+- `Migrations/Cuidadores/`
 
-#### Operaciones Comunes:
+#### Comandos de Migración:
 ```bash
-# Crear nueva migración
-dotnet ef migrations add NombreMigracion
+# Crear migración para autenticación
+dotnet ef migrations add NombreMigracion --context AppDbContext
+
+# Crear migración para cuidadores
+dotnet ef migrations add NombreMigracion --context CuidadoresDbContext
 
 # Aplicar migraciones
-dotnet ef database update
-
-# Revertir migración
-dotnet ef database update NombreMigracionAnterior
+dotnet ef database update --context AppDbContext
+dotnet ef database update --context CuidadoresDbContext
 ```
 
-#### Estructura de Tablas:
-```sql
--- Tabla de usuarios (Identity)
-AspNetUsers (Id, UserName, Email, Name, CreatedAt)
-
--- Tabla de roles (Identity)
-AspNetRoles (Id, Name, Description)
-
--- Tabla de cuidadores
-Cuidadores (
-    CuidadorID, UsuarioID, DocumentoIdentidad,
-    TelefonoEmergencia, Biografia, Experiencia,
-    HorarioAtencion, TarifaPorHora, CalificacionPromedio,
-    DocumentoVerificado, FechaVerificacion, FechaCreacion
-)
-```
+#### Modificaciones Comunes:
+- Agregar nuevas tablas
+- Modificar esquemas existentes
+- Agregar índices para optimización
+- Cambiar relaciones entre entidades
 
 ### 4. Frontend - Estados y Navegación
 
@@ -259,116 +265,98 @@ Cuidadores (
 
 #### Estados Principales:
 ```typescript
-// Tipos de vista
-type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador-dashboard';
+// Vista actual
+const [currentView, setCurrentView] = useState<ViewType>('login');
 
 // Estados de formularios
-interface LoginRequestWithRole {
-  email: string;
-  password: string;
-  role: 'Cliente' | 'Cuidador';
-}
+const [loginForm, setLoginForm] = useState<LoginRequestWithRole>({...});
+const [registerForm, setRegisterForm] = useState<RegisterRequestWithRole>({...});
+
+// Estados de carga y mensajes
+const [loading, setLoading] = useState(false);
+const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 ```
 
-#### Flujo de Navegación:
-```typescript
-// Login exitoso
-if (loginForm.role === 'Cuidador') {
-  try {
-    await cuidadorService.getMiPerfil();
-    setCurrentView('cuidador-dashboard');  // Tiene perfil
-  } catch (error) {
-    setCurrentView('cuidador-form');       // No tiene perfil
-  }
-} else {
-  setCurrentView('dashboard');             // Es cliente
-}
-```
+#### Modificaciones Comunes:
+- Agregar nuevas vistas
+- Modificar flujo de navegación
+- Cambiar validaciones de formularios
+- Agregar nuevos tipos de mensajes
 
 ---
 
 ## 🐛 Debugging
 
-### 1. Problemas de Autenticación
+### 1. Debugging del Backend
 
-#### Verificar Token:
-```javascript
-// En consola del navegador
-console.log(localStorage.getItem('token'));
-```
-
-#### Verificar Headers:
-```javascript
-// En Network tab del navegador
-// Verificar que Authorization header esté presente
-```
-
-#### Logs del Backend:
+#### Logs de Desarrollo
 ```bash
-# Ver logs del contenedor
-docker-compose logs petcare-api
+# Ver logs detallados
+dotnet run --environment Development
+
+# Ver logs de Entity Framework
+# Agregar en appsettings.Development.json:
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.EntityFrameworkCore.Database.Command": "Information"
+    }
+  }
+}
 ```
 
-### 2. Problemas de Base de Datos
-
-#### Verificar Conexión:
+#### Debugging con Docker
 ```bash
-# Verificar que la base de datos esté ejecutándose
-docker ps | grep sqlserver
+# Ver logs en tiempo real
+docker-compose logs -f petcare-api
 
-# Conectar a la base de datos
-docker exec -it petcare-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourPassword123!
+# Ejecutar comandos en contenedor
+docker-compose exec petcare-api dotnet ef database update
 ```
 
-#### Verificar Migraciones:
+#### Puntos de Breakpoint Comunes:
+- `AuthController.Login()` - Validación de credenciales
+- `AuthController.Register()` - Creación de usuarios
+- `CuidadorController.CreateCuidador()` - Creación de perfiles
+- `AuthService.GenerateJwtToken()` - Generación de tokens
+
+### 2. Debugging del Frontend
+
+#### Herramientas de Desarrollo
+```bash
+# Ejecutar en modo desarrollo
+npm run dev
+
+# Ver logs en consola del navegador
+# Usar React Developer Tools
+# Usar Network tab para ver requests
+```
+
+#### Puntos de Breakpoint Comunes:
+- `App.tsx - handleLogin()` - Proceso de login
+- `App.tsx - handleRegister()` - Proceso de registro
+- `api.ts - interceptors` - Manejo de tokens
+- `CuidadorDashboard.tsx - loadCuidadorProfile()` - Carga de datos
+
+### 3. Debugging de Base de Datos
+
+#### Conectar a SQL Server
+```bash
+# Conectar desde Docker
+docker exec -it petcareservicios-db-1 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd
+
+# Consultas útiles
+SELECT * FROM AspNetUsers;
+SELECT * FROM Cuidadores;
+SELECT * FROM AspNetRoles;
+```
+
+#### Verificar Migraciones
 ```bash
 # Ver migraciones aplicadas
-dotnet ef migrations list
-
-# Verificar estado de la base de datos
-dotnet ef database update --dry-run
-```
-
-### 3. Problemas de CORS
-
-#### Verificar Configuración:
-```csharp
-// En Program.cs
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins("http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
-
-// Asegurar que se use antes de MapControllers
-app.UseCors("AllowFrontend");
-```
-
-#### Verificar en Navegador:
-```javascript
-// En consola del navegador
-// Buscar errores de CORS en Network tab
-```
-
-### 4. Problemas de Frontend
-
-#### Verificar Estados:
-```javascript
-// En React DevTools
-// Verificar estados de componentes
-// Verificar props pasadas
-```
-
-#### Verificar API Calls:
-```javascript
-// En Network tab
-// Verificar que las llamadas a la API sean correctas
-// Verificar respuestas de la API
+dotnet ef migrations list --context AppDbContext
+dotnet ef migrations list --context CuidadoresDbContext
 ```
 
 ---
@@ -378,166 +366,86 @@ app.UseCors("AllowFrontend");
 ### 1. Agregar Nuevo Campo a Cuidador
 
 #### Backend:
-1. **Modificar modelo** (`PetCareBackend/Models/Auth/Cuidador.cs`):
-```csharp
-public class Cuidador
-{
-    // ... campos existentes
-    public string? NuevoCampo { get; set; }
-}
-```
-
-2. **Actualizar DTOs** (`PetCareBackend/Models/Auth/CuidadorRequest.cs`):
-```csharp
-public class CuidadorRequest
-{
-    // ... campos existentes
-    public string? NuevoCampo { get; set; }
-}
-
-public class CuidadorResponse
-{
-    // ... campos existentes
-    public string? NuevoCampo { get; set; }
-}
-```
-
-3. **Crear migración**:
-```bash
-dotnet ef migrations add AddNuevoCampoToCuidador
-dotnet ef database update
-```
+1. **Modificar modelo** `PetCareBackend/Models/Cuidadores/Cuidador.cs`
+2. **Crear migración**:
+   ```bash
+   dotnet ef migrations add AgregarNuevoCampo --context CuidadoresDbContext
+   ```
+3. **Aplicar migración**:
+   ```bash
+   dotnet ef database update --context CuidadoresDbContext
+   ```
+4. **Actualizar DTOs** en `CuidadorRequest.cs` y `CuidadorResponse.cs`
+5. **Modificar servicio** `CuidadorService.cs`
 
 #### Frontend:
-1. **Actualizar tipos** (`PetCareFrond/src/types/cuidador.ts`):
-```typescript
-export interface CuidadorRequest {
-  // ... campos existentes
-  nuevoCampo?: string;
-}
-
-export interface CuidadorResponse {
-  // ... campos existentes
-  nuevoCampo?: string;
-}
-```
-
-2. **Actualizar formulario** (`PetCareFrond/src/components/CuidadorForm.tsx`):
-```typescript
-// Agregar campo al estado
-const [formData, setFormData] = useState<CuidadorRequest>({
-  // ... campos existentes
-  nuevoCampo: initialData?.nuevoCampo || ''
-});
-
-// Agregar input en el JSX
-<div className="form-floating mb-3">
-  <input
-    type="text"
-    className="form-control"
-    id="nuevoCampo"
-    value={formData.nuevoCampo || ''}
-    onChange={(e) => handleInputChange('nuevoCampo', e.target.value)}
-    placeholder="Nuevo campo"
-  />
-  <label htmlFor="nuevoCampo">Nuevo Campo</label>
-</div>
-```
-
-3. **Actualizar dashboard** (`PetCareFrond/src/components/cuidador/CuidadorDashboard.tsx`):
-```typescript
-// Mostrar el nuevo campo en el dashboard
-<div className="mb-2">
-  <small className="text-muted">Nuevo Campo:</small>
-  <p className="mb-1 fw-semibold">{cuidador.nuevoCampo || 'No especificado'}</p>
-</div>
-```
+1. **Actualizar tipos** en `PetCareFrond/src/types/cuidador.ts`
+2. **Modificar formulario** en `CuidadorForm.tsx`
+3. **Actualizar dashboard** en `CuidadorDashboard.tsx`
 
 ### 2. Agregar Nuevo Rol
 
 #### Backend:
-1. **Modificar controlador** (`PetCareBackend/Controllers/AuthController.cs`):
-```csharp
-// En el método Register
-if (!await _roleManager.RoleExistsAsync(request.Role))
-{
-    await _roleManager.CreateAsync(new UserRole { Name = request.Role });
-}
-```
+1. **Crear rol en migración** o agregar en `Program.cs`
+2. **Actualizar validaciones** en `AuthController.cs`
+3. **Modificar lógica de autorización**
 
 #### Frontend:
-1. **Actualizar tipos** (`PetCareFrond/src/types/cuidador.ts`):
-```typescript
-export interface RegisterRequestWithRole {
-  email: string;
-  password: string;
-  name: string;
-  role: 'Cliente' | 'Cuidador' | 'NuevoRol';
-}
-
-export interface LoginRequestWithRole {
-  email: string;
-  password: string;
-  role: 'Cliente' | 'Cuidador' | 'NuevoRol';
-}
-```
-
-2. **Actualizar App.tsx**:
-```typescript
-const [selectedRole, setSelectedRole] = useState<'Cliente' | 'Cuidador' | 'NuevoRol'>('Cliente');
-
-// Agregar opción en el selector de roles
-<input
-  type="radio"
-  className="btn-check"
-  name="loginRole"
-  id="loginNuevoRol"
-  checked={selectedRole === 'NuevoRol'}
-  onChange={() => handleRoleChange('NuevoRol')}
-/>
-<label className="btn btn-outline-primary" htmlFor="loginNuevoRol">
-  <i className="bi bi-star"></i> Nuevo Rol
-</label>
-```
+1. **Actualizar tipos** para incluir nuevo rol
+2. **Modificar selectores** de rol en formularios
+3. **Agregar lógica** de navegación específica
 
 ### 3. Modificar Validaciones
 
 #### Backend:
 ```csharp
-// En PetCareBackend/Models/Auth/CuidadorRequest.cs
-public class CuidadorRequest
+// En AuthService.cs
+public async Task<AuthResponse> RegisterAsync(User user, string password)
 {
-    [Required]
-    [StringLength(20)]
-    public string DocumentoIdentidad { get; set; } = string.Empty;
-
-    [Required]
-    [StringLength(15)]
-    [RegularExpression(@"^\+?[1-9]\d{1,14}$", ErrorMessage = "Formato de teléfono inválido")]
-    public string TelefonoEmergencia { get; set; } = string.Empty;
+    // Agregar validaciones personalizadas
+    if (string.IsNullOrEmpty(user.Name))
+    {
+        return new AuthResponse { Success = false, Message = "El nombre es requerido" };
+    }
+    
+    // Resto de la lógica...
 }
 ```
 
 #### Frontend:
 ```typescript
-// En PetCareFrond/src/components/CuidadorForm.tsx
-<input
-  type="tel"
-  className="form-control"
-  id="telefonoEmergencia"
-  value={formData.telefonoEmergencia}
-  onChange={(e) => handleInputChange('telefonoEmergencia', e.target.value)}
-  placeholder="+57 300 123 4567"
-  pattern="^\+?[1-9]\d{1,14}$"
-  title="Ingrese un número de teléfono válido"
-  maxLength={15}
-  required
-/>
+// En formularios
+const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+        setValidated(true);
+        return;
+    }
+    
+    // Validaciones adicionales
+    if (formData.password.length < 8) {
+        setMessage({ text: 'La contraseña debe tener al menos 8 caracteres', type: 'error' });
+        return;
+    }
+    
+    // Resto de la lógica...
+};
 ```
+
+### 4. Agregar Nueva Vista
+
+#### Frontend:
+1. **Crear componente** en `src/components/`
+2. **Agregar tipo** en `App.tsx`:
+   ```typescript
+   type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador-dashboard' | 'nueva-vista';
+   ```
+3. **Agregar lógica** de navegación
+4. **Crear renderizado** en `renderContent()`
 
 ---
 
-## 🚨 Troubleshooting
+## 🐛 Troubleshooting
 
 ### Problemas Comunes
 
@@ -556,86 +464,126 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
-
-// Asegurar que se use antes de MapControllers
-app.UseCors("AllowFrontend");
 ```
 
-#### 2. Token JWT Inválido
-**Síntomas**: Error 401 en todas las peticiones autenticadas
+#### 2. Error de Autenticación
+**Síntomas**: 401 Unauthorized en requests
 **Solución**:
 ```bash
-# Verificar configuración JWT en appsettings.json
-{
-  "Jwt": {
-    "Key": "tu-clave-secreta-de-32-caracteres-minimo",
-    "Issuer": "PetCare",
-    "Audience": "PetCareUsers",
-    "ExpirationHours": 24
-  }
-}
-```
+# Verificar token en localStorage
+localStorage.getItem('token')
 
-#### 3. Error de Migración
-**Síntomas**: Error al aplicar migraciones
-**Solución**:
-```bash
-# Revertir última migración
-dotnet ef database update NombreMigracionAnterior
-
-# Eliminar migración problemática
-dotnet ef migrations remove
-
-# Crear nueva migración
-dotnet ef migrations add NuevaMigracion
-dotnet ef database update
-```
-
-#### 4. Frontend No Se Conecta al Backend
-**Síntomas**: Error de conexión en Network tab
-**Solución**:
-```typescript
-// Verificar URL en PetCareFrond/src/services/api.ts
-const API_BASE_URL = 'http://localhost:5000/api';
-
-// Verificar que el backend esté ejecutándose
-docker ps | grep petcare-api
-
-// Verificar logs del backend
+# Verificar configuración JWT
+# Revisar logs del backend
 docker-compose logs petcare-api
 ```
 
-#### 5. Error de Validación de Formulario
-**Síntomas**: Formularios no se envían aunque parezcan válidos
+#### 3. Error de Base de Datos
+**Síntomas**: Error "Invalid object name"
 **Solución**:
-```typescript
-// Verificar validación en el frontend
-const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-  event.stopPropagation();
-  
-  const form = event.currentTarget;
-  if (form.checkValidity() === false) {
-    setValidated(true);
-    return;
-  }
-  // ... resto del código
-};
+```bash
+# Aplicar migraciones
+dotnet ef database update --context AppDbContext
+dotnet ef database update --context CuidadoresDbContext
+
+# O reiniciar contenedores
+docker-compose down
+docker-compose up -d
+```
+
+#### 4. Frontend No Se Conecta
+**Síntomas**: Error de conexión en Network tab
+**Solución**:
+```bash
+# Verificar que el backend esté ejecutándose
+curl http://localhost:5000/api/auth/health
+
+# Verificar URL en servicios de API
+# Revisar configuración de proxy en vite.config.ts
+```
+
+#### 5. Error de Migración
+**Síntomas**: Error al aplicar migraciones
+**Solución**:
+```bash
+# Revertir migración problemática
+dotnet ef database update NombreMigracionAnterior --context AppDbContext
+
+# Eliminar migración
+dotnet ef migrations remove --context AppDbContext
+
+# Crear nueva migración
+dotnet ef migrations add NuevaMigracion --context AppDbContext
+```
+
+### Comandos de Recuperación
+
+#### Reconstruir Todo
+```bash
+# Detener contenedores
+docker-compose down
+
+# Limpiar volúmenes (cuidado: elimina datos)
+docker-compose down -v
+
+# Reconstruir
+docker-compose up --build -d
+```
+
+#### Limpiar Frontend
+```bash
+cd PetCareFrond
+rm -rf node_modules package-lock.json
+npm install
+npm run dev
+```
+
+#### Resetear Base de Datos
+```bash
+# Eliminar volúmenes
+docker-compose down -v
+
+# Recrear contenedores
+docker-compose up -d
+
+# Aplicar migraciones
+docker-compose exec petcare-api dotnet ef database update --context AppDbContext
+docker-compose exec petcare-api dotnet ef database update --context CuidadoresDbContext
 ```
 
 ---
 
-## 📞 Contacto y Soporte
+## 📊 Monitoreo y Logs
 
-- **Documentación**: Este README
-- **Issues**: [GitHub Issues](https://github.com/WooshC/PetCareServicios/issues)
-- **Email**: soporte@petcare.com
+### Logs Útiles
+```bash
+# Backend en tiempo real
+docker-compose logs -f petcare-api
+
+# Base de datos
+docker-compose logs -f petcare-db
+
+# Todos los servicios
+docker-compose logs -f
+```
+
+### Métricas de Rendimiento
+- **Tiempo de respuesta** de endpoints
+- **Uso de memoria** de contenedores
+- **Conexiones a base de datos**
+- **Errores de autenticación**
+
+### Alertas Recomendadas
+- **Backend no responde** (puerto 5000)
+- **Base de datos no accesible** (puerto 14433)
+- **Errores de migración**
+- **Tokens JWT expirados**
 
 ---
 
 <div align="center">
-  <p>🔧 <strong>¡Mantenimiento Documentado!</strong></p>
-  <p>📚 Flujos y Estructuras Claros</p>
-  <p>🐛 Debugging y Troubleshooting</p>
-  <p>🔄 Guías de Modificación</p>
+  <p>🔧 <strong>Mantenimiento PetCare</strong></p>
+  <p>✨ Debugging + Modificaciones + Troubleshooting</p>
+  <p>🐛 Solución de Problemas</p>
+  <p>📊 Monitoreo y Logs</p>
 </div> 
