@@ -6,18 +6,54 @@ interface CuidadorDashboardProps {
   onLogout: () => void;
 }
 
+/**
+ * Dashboard principal para cuidadores
+ * Muestra información completa del perfil, estadísticas y opciones de gestión
+ * 
+ * FLUJO DE CARGA:
+ * 1. Al montar el componente, carga automáticamente el perfil del cuidador
+ * 2. Muestra estados de carga mientras obtiene los datos
+ * 3. Renderiza la información del perfil una vez cargada
+ * 4. Maneja errores si no puede cargar el perfil
+ */
 const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
+  // ===== ESTADOS PRINCIPALES =====
+  
+  // Datos del perfil del cuidador
   const [cuidador, setCuidador] = useState<CuidadorResponse | null>(null);
+  
+  // Estado de carga para operaciones asíncronas
   const [loading, setLoading] = useState(true);
+  
+  // Mensaje de error si falla la carga
   const [error, setError] = useState<string | null>(null);
 
+  // ===== EFECTOS =====
+
+  /**
+   * Efecto que se ejecuta al montar el componente
+   * Carga automáticamente el perfil del cuidador
+   */
   useEffect(() => {
     loadCuidadorProfile();
   }, []);
 
+  // ===== FUNCIONES PRINCIPALES =====
+
+  /**
+   * Carga el perfil del cuidador desde la API
+   * FLUJO:
+   * 1. Establece estado de carga
+   * 2. Llama al servicio para obtener el perfil
+   * 3. Actualiza el estado con los datos
+   * 4. Maneja errores si ocurren
+   */
   const loadCuidadorProfile = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      // Llamada al servicio para obtener el perfil
       const profile = await cuidadorService.getMiPerfil();
       setCuidador(profile);
     } catch (err: any) {
@@ -27,6 +63,13 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  // ===== FUNCIONES DE UTILIDAD =====
+
+  /**
+   * Renderiza las estrellas de calificación
+   * @param rating - Calificación promedio (0-5)
+   * @returns JSX con estrellas llenas y vacías
+   */
   const renderStarRating = (rating: number) => {
     return (
       <div className="star-rating">
@@ -41,6 +84,11 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
     );
   };
 
+  /**
+   * Formatea valores monetarios en pesos colombianos
+   * @param amount - Cantidad a formatear
+   * @returns String formateado o "No especificada" si no hay valor
+   */
   const formatCurrency = (amount?: number) => {
     if (!amount) return 'No especificada';
     return new Intl.NumberFormat('es-CO', {
@@ -50,6 +98,9 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
     }).format(amount);
   };
 
+  // ===== ESTADOS DE CARGA Y ERROR =====
+
+  // Mostrar spinner de carga mientras se obtienen los datos
   if (loading) {
     return (
       <div className="container mt-4">
@@ -62,6 +113,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
     );
   }
 
+  // Mostrar mensaje de error si falla la carga
   if (error) {
     return (
       <div className="container mt-4">
@@ -73,6 +125,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
     );
   }
 
+  // Mostrar mensaje si no se encuentra el perfil
   if (!cuidador) {
     return (
       <div className="container mt-4">
@@ -84,9 +137,11 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
     );
   }
 
+  // ===== RENDERIZADO PRINCIPAL =====
+
   return (
     <div className="container mt-4">
-      {/* Header con botón de logout */}
+      {/* ===== HEADER CON BOTÓN DE LOGOUT ===== */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="h3 mb-0">
           <i className="bi bi-heart text-primary"></i> Dashboard de Cuidador
@@ -100,10 +155,11 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
       </div>
 
       <div className="row">
-        {/* Columna izquierda (info perfil) */}
+        {/* ===== COLUMNA IZQUIERDA - INFORMACIÓN DEL PERFIL ===== */}
         <div className="col-md-4">
           <div className="card shadow-sm mb-4">
             <div className="card-body text-center">
+              {/* Foto de perfil */}
               <img 
                 src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
                 className="rounded-circle mb-3" 
@@ -112,10 +168,12 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
                 alt="Foto perfil"
                 style={{ objectFit: 'cover' }}
               />
+              
+              {/* Nombre del usuario */}
               <h4>{cuidador.nombreUsuario}</h4>
               <p className="text-muted">Cuidador profesional</p>
 
-              {/* Calificación */}
+              {/* ===== CALIFICACIÓN PROMEDIO ===== */}
               <div className="mb-3">
                 {renderStarRating(cuidador.calificacionPromedio)}
                 <small className="text-muted d-block mt-1">
@@ -123,7 +181,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
                 </small>
               </div>
 
-              {/* Estado de verificación */}
+              {/* ===== ESTADO DE VERIFICACIÓN ===== */}
               <div className="mb-3">
                 {cuidador.documentoVerificado ? (
                   <span className="badge bg-success">
@@ -138,6 +196,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
                 )}
               </div>
 
+              {/* ===== BOTÓN DE EDICIÓN ===== */}
               <div className="d-grid gap-2">
                 <button className="btn btn-outline-primary">
                   <i className="bi bi-pencil-square me-1"></i>
@@ -147,25 +206,29 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
 
               <hr />
 
-              {/* Información de contacto */}
+              {/* ===== INFORMACIÓN DE CONTACTO ===== */}
               <div className="text-start">
                 <h6 className="fw-bold mb-3">Información de Contacto</h6>
                 
+                {/* Documento de identidad */}
                 <div className="mb-2">
                   <small className="text-muted">Documento:</small>
                   <p className="mb-1 fw-semibold">{cuidador.documentoIdentidad}</p>
                 </div>
 
+                {/* Teléfono de emergencia */}
                 <div className="mb-2">
                   <small className="text-muted">Teléfono de emergencia:</small>
                   <p className="mb-1 fw-semibold">{cuidador.telefonoEmergencia}</p>
                 </div>
 
+                {/* Email */}
                 <div className="mb-2">
                   <small className="text-muted">Email:</small>
                   <p className="mb-1 fw-semibold">{cuidador.emailUsuario}</p>
                 </div>
 
+                {/* Fecha de creación */}
                 <div className="mb-2">
                   <small className="text-muted">Miembro desde:</small>
                   <p className="mb-1 fw-semibold">
@@ -177,10 +240,10 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
           </div>
         </div>
 
-        {/* Columna derecha (servicios y detalles) */}
+        {/* ===== COLUMNA DERECHA - SERVICIOS Y DETALLES ===== */}
         <div className="col-md-8">
           <div className="row">
-            {/* Tarjeta de servicios */}
+            {/* ===== TARJETA DE SERVICIOS OFRECIDOS ===== */}
             <div className="col-md-6 mb-4">
               <div className="card shadow-sm h-100">
                 <div className="card-header bg-primary text-white">
@@ -212,7 +275,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
               </div>
             </div>
 
-            {/* Tarjeta de tarifas y horarios */}
+            {/* ===== TARJETA DE TARIFAS Y HORARIOS ===== */}
             <div className="col-md-6 mb-4">
               <div className="card shadow-sm h-100">
                 <div className="card-header bg-success text-white">
@@ -222,6 +285,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
                   </h5>
                 </div>
                 <div className="card-body">
+                  {/* Tarifa por hora */}
                   <div className="mb-3">
                     <strong>Tarifa por hora:</strong>
                     <p className="text-primary fw-bold fs-5 mb-0">
@@ -229,6 +293,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
                     </p>
                   </div>
                   
+                  {/* Horario de atención */}
                   <div className="mb-3">
                     <strong>Horario de atención:</strong>
                     <p className="mb-0">
@@ -236,6 +301,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
                     </p>
                   </div>
 
+                  {/* Estado de disponibilidad */}
                   <div className="mb-3">
                     <strong>Estado:</strong>
                     <p className="mb-0">
@@ -246,7 +312,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
               </div>
             </div>
 
-            {/* Biografía */}
+            {/* ===== TARJETA DE BIOGRAFÍA ===== */}
             <div className="col-12 mb-4">
               <div className="card shadow-sm">
                 <div className="card-header bg-info text-white">
@@ -269,7 +335,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
               </div>
             </div>
 
-            {/* Experiencia */}
+            {/* ===== TARJETA DE EXPERIENCIA ===== */}
             <div className="col-12 mb-4">
               <div className="card shadow-sm">
                 <div className="card-header bg-warning text-dark">
@@ -292,7 +358,7 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
               </div>
             </div>
 
-            {/* Estadísticas rápidas */}
+            {/* ===== TARJETA DE ESTADÍSTICAS ===== */}
             <div className="col-12">
               <div className="card shadow-sm">
                 <div className="card-header bg-secondary text-white">
@@ -303,24 +369,31 @@ const CuidadorDashboard: React.FC<CuidadorDashboardProps> = ({ onLogout }) => {
                 </div>
                 <div className="card-body">
                   <div className="row text-center">
+                    {/* Servicios completados */}
                     <div className="col-md-3">
                       <div className="border-end">
                         <h3 className="text-primary mb-1">0</h3>
                         <small className="text-muted">Servicios completados</small>
                       </div>
                     </div>
+                    
+                    {/* Clientes satisfechos */}
                     <div className="col-md-3">
                       <div className="border-end">
                         <h3 className="text-success mb-1">0</h3>
                         <small className="text-muted">Clientes satisfechos</small>
                       </div>
                     </div>
+                    
+                    {/* Horas trabajadas */}
                     <div className="col-md-3">
                       <div className="border-end">
                         <h3 className="text-info mb-1">0</h3>
                         <small className="text-muted">Horas trabajadas</small>
                       </div>
                     </div>
+                    
+                    {/* Reseñas recibidas */}
                     <div className="col-md-3">
                       <div>
                         <h3 className="text-warning mb-1">0</h3>

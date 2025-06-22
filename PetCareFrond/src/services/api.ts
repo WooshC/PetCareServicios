@@ -2,9 +2,13 @@ import axios from 'axios';
 import { LoginRequest, RegisterRequest, AuthResponse } from '../types/auth';
 import { CuidadorRequest, CuidadorResponse, RegisterRequestWithRole, LoginRequestWithRole } from '../types/cuidador';
 
+// URL base de la API - Configurar según el entorno
 const API_BASE_URL = 'http://localhost:5000/api';
 
-// Create axios instance
+/**
+ * Instancia de axios configurada para la API de PetCare
+ * Incluye configuración base y interceptores para manejo de tokens
+ */
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -12,7 +16,15 @@ const api = axios.create({
   },
 });
 
-// Add token to requests if available
+/**
+ * Interceptor de solicitudes HTTP
+ * Agrega automáticamente el token JWT a todas las peticiones autenticadas
+ * FLUJO:
+ * 1. Se ejecuta antes de cada petición HTTP
+ * 2. Verifica si existe un token en localStorage
+ * 3. Si existe, lo agrega al header Authorization
+ * 4. Permite que la petición continúe
+ */
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -21,105 +33,223 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+/**
+ * Servicio de autenticación
+ * Maneja login, registro y gestión de tokens JWT
+ */
 export const authService = {
-  // Login user with role
+  /**
+   * Inicia sesión con rol específico
+   * FLUJO:
+   * 1. Envía credenciales y rol a la API
+   * 2. API valida credenciales y verifica rol
+   * 3. Retorna token JWT si es exitoso
+   * 4. Lanza error si las credenciales son inválidas o el rol no coincide
+   * 
+   * @param credentials - Credenciales de login con rol
+   * @returns Promise con respuesta de autenticación
+   */
   async loginWithRole(credentials: LoginRequestWithRole): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/login', credentials);
     return response.data;
   },
 
-  // Register user with role
+  /**
+   * Registra un nuevo usuario con rol específico
+   * FLUJO:
+   * 1. Envía datos del usuario y rol a la API
+   * 2. API crea el usuario y asigna el rol
+   * 3. Retorna token JWT si es exitoso
+   * 4. Lanza error si el email ya existe o hay problemas de validación
+   * 
+   * @param userData - Datos del usuario con rol
+   * @returns Promise con respuesta de autenticación
+   */
   async registerWithRole(userData: RegisterRequestWithRole): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/register', userData);
     return response.data;
   },
 
-  // Login user (legacy method)
+  /**
+   * Inicia sesión (método legacy sin rol)
+   * @deprecated Usar loginWithRole en su lugar
+   */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/login', credentials);
     return response.data;
   },
 
-  // Register user (legacy method)
+  /**
+   * Registra un nuevo usuario (método legacy sin rol)
+   * @deprecated Usar registerWithRole en su lugar
+   */
   async register(userData: RegisterRequest): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/register', userData);
     return response.data;
   },
 
-  // Check API health
+  /**
+   * Verifica el estado de salud de la API
+   * Útil para testing y monitoreo
+   * 
+   * @returns Promise con mensaje de estado
+   */
   async healthCheck(): Promise<string> {
     const response = await api.get<string>('/auth/health');
     return response.data;
   },
 
-  // Store token in localStorage
+  // ===== GESTIÓN DE TOKENS =====
+
+  /**
+   * Almacena el token JWT en localStorage
+   * El token se usa automáticamente en todas las peticiones posteriores
+   * 
+   * @param token - Token JWT recibido del servidor
+   */
   setToken(token: string): void {
     localStorage.setItem('token', token);
   },
 
-  // Get token from localStorage
+  /**
+   * Obtiene el token JWT del localStorage
+   * 
+   * @returns Token JWT o null si no existe
+   */
   getToken(): string | null {
     return localStorage.getItem('token');
   },
 
-  // Remove token from localStorage
+  /**
+   * Elimina el token JWT del localStorage
+   * Útil para logout y limpieza de sesión
+   */
   removeToken(): void {
     localStorage.removeItem('token');
   },
 
-  // Check if user is authenticated
+  /**
+   * Verifica si el usuario está autenticado
+   * 
+   * @returns true si existe un token, false en caso contrario
+   */
   isAuthenticated(): boolean {
     return !!this.getToken();
   }
 };
 
+/**
+ * Servicio de gestión de cuidadores
+ * Maneja CRUD de perfiles de cuidadores y operaciones específicas
+ */
 export const cuidadorService = {
-  // Get all cuidadores
+  /**
+   * Obtiene todos los cuidadores registrados
+   * Requiere autenticación
+   * 
+   * @returns Promise con lista de cuidadores
+   */
   async getAllCuidadores(): Promise<CuidadorResponse[]> {
     const response = await api.get<CuidadorResponse[]>('/cuidador');
     return response.data;
   },
 
-  // Get cuidador by ID
+  /**
+   * Obtiene un cuidador específico por ID
+   * Requiere autenticación
+   * 
+   * @param id - ID del cuidador
+   * @returns Promise con datos del cuidador
+   */
   async getCuidadorById(id: number): Promise<CuidadorResponse> {
     const response = await api.get<CuidadorResponse>(`/cuidador/${id}`);
     return response.data;
   },
 
-  // Get my cuidador profile
+  /**
+   * Obtiene el perfil del cuidador autenticado
+   * FLUJO:
+   * 1. Usa el token JWT para identificar al usuario
+   * 2. Busca el perfil de cuidador asociado
+   * 3. Retorna los datos del perfil
+   * 4. Lanza error si no existe perfil o no está autenticado
+   * 
+   * @returns Promise con perfil del cuidador
+   */
   async getMiPerfil(): Promise<CuidadorResponse> {
     const response = await api.get<CuidadorResponse>('/cuidador/mi-perfil');
     return response.data;
   },
 
-  // Create cuidador profile
+  /**
+   * Crea un nuevo perfil de cuidador
+   * FLUJO:
+   * 1. Usa el token JWT para identificar al usuario
+   * 2. Valida que no exista ya un perfil para ese usuario
+   * 3. Crea el perfil con los datos proporcionados
+   * 4. Retorna el perfil creado
+   * 5. Lanza error si ya existe perfil o datos inválidos
+   * 
+   * @param request - Datos del perfil de cuidador
+   * @returns Promise con perfil creado
+   */
   async createCuidador(request: CuidadorRequest): Promise<CuidadorResponse> {
     const response = await api.post<CuidadorResponse>('/cuidador', request);
     return response.data;
   },
 
-  // Update cuidador profile
+  /**
+   * Actualiza un perfil de cuidador específico
+   * Requiere permisos de administrador
+   * 
+   * @param id - ID del cuidador
+   * @param request - Datos actualizados
+   * @returns Promise con perfil actualizado
+   */
   async updateCuidador(id: number, request: CuidadorRequest): Promise<CuidadorResponse> {
     const response = await api.put<CuidadorResponse>(`/cuidador/${id}`, request);
     return response.data;
   },
 
-  // Update my cuidador profile
+  /**
+   * Actualiza el perfil del cuidador autenticado
+   * FLUJO:
+   * 1. Usa el token JWT para identificar al usuario
+   * 2. Busca el perfil asociado
+   * 3. Actualiza con los nuevos datos
+   * 4. Retorna el perfil actualizado
+   * 
+   * @param request - Datos actualizados del perfil
+   * @returns Promise con perfil actualizado
+   */
   async updateMiPerfil(request: CuidadorRequest): Promise<CuidadorResponse> {
     const response = await api.put<CuidadorResponse>('/cuidador/mi-perfil', request);
     return response.data;
   },
 
-  // Delete cuidador (admin only)
+  /**
+   * Elimina un perfil de cuidador
+   * Requiere permisos de administrador
+   * 
+   * @param id - ID del cuidador a eliminar
+   * @returns Promise que se resuelve cuando se completa la eliminación
+   */
   async deleteCuidador(id: number): Promise<void> {
     await api.delete(`/cuidador/${id}`);
   },
 
-  // Verify document (admin only)
+  /**
+   * Marca el documento de un cuidador como verificado
+   * Requiere permisos de administrador
+   * 
+   * @param id - ID del cuidador
+   * @returns Promise con mensaje de confirmación
+   */
   async verificarDocumento(id: number): Promise<{ message: string }> {
     const response = await api.post<{ message: string }>(`/cuidador/${id}/verificar`);
     return response.data;
   }
 };
 
+// Exportar la instancia de axios para uso directo si es necesario
 export default api; 

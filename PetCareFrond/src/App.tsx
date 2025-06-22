@@ -6,23 +6,42 @@ import Layout from './components/Layout';
 import CuidadorForm from './components/CuidadorForm';
 import CuidadorDashboard from './components/cuidador/CuidadorDashboard';
 
+// Tipos de vistas disponibles en la aplicación
 type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador-dashboard';
 
+/**
+ * Componente principal de la aplicación PetCare
+ * Maneja la autenticación, registro y navegación entre diferentes vistas
+ * según el rol del usuario (Cliente o Cuidador)
+ */
 function App() {
+  // ===== ESTADOS PRINCIPALES =====
+  
+  // Vista actual de la aplicación
   const [currentView, setCurrentView] = useState<ViewType>('login');
-  const [isLogin, setIsLogin] = useState(true);
+  
+  // Estado de carga para operaciones asíncronas
   const [loading, setLoading] = useState(false);
+  
+  // Mensajes de éxito/error para mostrar al usuario
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  
+  // Estado de validación de formularios
   const [validated, setValidated] = useState(false);
+  
+  // Rol seleccionado por el usuario (Cliente o Cuidador)
   const [selectedRole, setSelectedRole] = useState<'Cliente' | 'Cuidador'>('Cliente');
 
-  // Form states
+  // ===== ESTADOS DE FORMULARIOS =====
+  
+  // Datos del formulario de login con rol
   const [loginForm, setLoginForm] = useState<LoginRequestWithRole>({
     email: '',
     password: '',
     role: 'Cliente'
   });
 
+  // Datos del formulario de registro con rol
   const [registerForm, setRegisterForm] = useState<RegisterRequestWithRole>({
     email: '',
     password: '',
@@ -30,7 +49,12 @@ function App() {
     role: 'Cliente'
   });
 
-  // Form validation
+  // ===== MANEJADORES DE FORMULARIOS =====
+
+  /**
+   * Maneja el envío de formularios (login y registro)
+   * Valida el formulario y ejecuta la acción correspondiente
+   */
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>, formType: 'login' | 'register') => {
     event.preventDefault();
     event.stopPropagation();
@@ -50,26 +74,40 @@ function App() {
     }
   };
 
+  /**
+   * Procesa el login del usuario
+   * FLUJO:
+   * 1. Valida credenciales con la API
+   * 2. Si es exitoso, guarda el token
+   * 3. Si es Cuidador, verifica si tiene perfil
+   * 4. Redirige según el resultado
+   */
   const handleLogin = async () => {
     setLoading(true);
     setMessage(null);
 
     try {
+      // Llamada a la API para autenticación
       const response = await authService.loginWithRole(loginForm);
       
       if (response.success) {
+        // Guardar token en localStorage
         authService.setToken(response.token);
         setMessage({ text: '¡Inicio de sesión exitoso!', type: 'success' });
         
-        // Si es cuidador, verificar si tiene perfil
+        // FLUJO ESPECÍFICO PARA CUIDADORES
         if (loginForm.role === 'Cuidador') {
           try {
+            // Verificar si el cuidador ya tiene un perfil creado
             await cuidadorService.getMiPerfil();
+            // Si tiene perfil, ir al dashboard de cuidador
             setCurrentView('cuidador-dashboard');
           } catch (error) {
+            // Si no tiene perfil, ir al formulario de creación
             setCurrentView('cuidador-form');
           }
         } else {
+          // Si es Cliente, ir al dashboard general
           setCurrentView('dashboard');
         }
       } else {
@@ -85,21 +123,33 @@ function App() {
     }
   };
 
+  /**
+   * Procesa el registro de nuevos usuarios
+   * FLUJO:
+   * 1. Crea el usuario en la API
+   * 2. Si es exitoso, guarda el token
+   * 3. Si es Cuidador, redirige al formulario de perfil
+   * 4. Si es Cliente, redirige al dashboard
+   */
   const handleRegister = async () => {
     setLoading(true);
     setMessage(null);
 
     try {
+      // Llamada a la API para registro
       const response = await authService.registerWithRole(registerForm);
       
       if (response.success) {
+        // Guardar token en localStorage
         authService.setToken(response.token);
         setMessage({ text: '¡Registro exitoso!', type: 'success' });
         
-        // Si es cuidador, ir al formulario de perfil
+        // FLUJO ESPECÍFICO PARA CUIDADORES
         if (registerForm.role === 'Cuidador') {
+          // Los cuidadores deben completar su perfil después del registro
           setCurrentView('cuidador-form');
         } else {
+          // Los clientes van directamente al dashboard
           setCurrentView('dashboard');
         }
       } else {
@@ -115,13 +165,21 @@ function App() {
     }
   };
 
+  /**
+   * Procesa la creación del perfil de cuidador
+   * FLUJO:
+   * 1. Envía datos del perfil a la API
+   * 2. Si es exitoso, redirige al dashboard de cuidador
+   */
   const handleCuidadorSubmit = async (data: CuidadorRequest) => {
     setLoading(true);
     setMessage(null);
 
     try {
+      // Crear perfil de cuidador en la API
       await cuidadorService.createCuidador(data);
       setMessage({ text: '¡Perfil de cuidador creado exitosamente!', type: 'success' });
+      // Ir al dashboard de cuidador
       setCurrentView('cuidador-dashboard');
     } catch (error: any) {
       setMessage({ 
@@ -133,6 +191,13 @@ function App() {
     }
   };
 
+  /**
+   * Maneja el logout del usuario
+   * FLUJO:
+   * 1. Elimina el token del localStorage
+   * 2. Resetea todos los estados
+   * 3. Regresa a la vista de login
+   */
   const handleLogout = () => {
     authService.removeToken();
     setCurrentView('login');
@@ -142,6 +207,11 @@ function App() {
     setRegisterForm({ email: '', password: '', name: '', role: 'Cliente' });
   };
 
+  // ===== MANEJADORES DE CAMBIOS =====
+
+  /**
+   * Actualiza los campos de los formularios
+   */
   const handleInputChange = (form: 'login' | 'register', field: string, value: string) => {
     if (form === 'login') {
       setLoginForm(prev => ({ ...prev, [field]: value }));
@@ -150,17 +220,28 @@ function App() {
     }
   };
 
+  /**
+   * Maneja el cambio de rol seleccionado
+   * Actualiza tanto el estado visual como los formularios
+   */
   const handleRoleChange = (role: 'Cliente' | 'Cuidador') => {
     setSelectedRole(role);
     setLoginForm(prev => ({ ...prev, role }));
     setRegisterForm(prev => ({ ...prev, role }));
   };
 
+  // ===== EFECTOS =====
+
   // Reset validation when switching forms
   useEffect(() => {
     setValidated(false);
   }, [isLogin]);
 
+  // ===== RENDERIZADO DE FORMULARIOS =====
+
+  /**
+   * Renderiza el formulario de login con selección de rol
+   */
   const renderLoginForm = () => (
     <form 
       onSubmit={(e) => handleSubmit(e, 'login')} 
@@ -168,6 +249,7 @@ function App() {
       className={validated ? 'was-validated' : ''}
       noValidate
     >
+      {/* Selector de rol */}
       <div className="mb-3">
         <label className="form-label">Tipo de Usuario</label>
         <div className="btn-group w-100" role="group">
@@ -197,6 +279,7 @@ function App() {
         </div>
       </div>
 
+      {/* Campo de email */}
       <div className="form-floating mb-3">
         <input
           type="email"
@@ -211,6 +294,7 @@ function App() {
         <div className="invalid-feedback">Por favor ingrese un email válido</div>
       </div>
 
+      {/* Campo de contraseña */}
       <div className="form-floating mb-3">
         <input
           type="password"
@@ -225,6 +309,7 @@ function App() {
         <div className="invalid-feedback">La contraseña debe tener al menos 6 caracteres</div>
       </div>
 
+      {/* Botón de envío */}
       <button 
         type="submit" 
         className="btn btn-primary w-100 py-2"
@@ -236,6 +321,9 @@ function App() {
     </form>
   );
 
+  /**
+   * Renderiza el formulario de registro con selección de rol
+   */
   const renderRegisterForm = () => (
     <form 
       onSubmit={(e) => handleSubmit(e, 'register')} 
@@ -243,6 +331,7 @@ function App() {
       className={validated ? 'was-validated' : ''}
       noValidate
     >
+      {/* Selector de rol */}
       <div className="mb-3">
         <label className="form-label">Tipo de Usuario</label>
         <div className="btn-group w-100" role="group">
@@ -272,6 +361,7 @@ function App() {
         </div>
       </div>
 
+      {/* Campo de nombre */}
       <div className="form-floating mb-3">
         <input
           type="text"
@@ -286,6 +376,7 @@ function App() {
         <div className="invalid-feedback">Por favor ingrese su nombre</div>
       </div>
 
+      {/* Campo de email */}
       <div className="form-floating mb-3">
         <input
           type="email"
@@ -300,6 +391,7 @@ function App() {
         <div className="invalid-feedback">Por favor ingrese un email válido</div>
       </div>
 
+      {/* Campo de contraseña */}
       <div className="form-floating mb-3">
         <input
           type="password"
@@ -315,6 +407,7 @@ function App() {
         <div className="invalid-feedback">La contraseña debe tener al menos 8 caracteres</div>
       </div>
 
+      {/* Botón de envío */}
       <button 
         type="submit" 
         className="btn btn-primary w-100 py-2"
@@ -326,6 +419,9 @@ function App() {
     </form>
   );
 
+  /**
+   * Renderiza el formulario de creación de perfil de cuidador
+   */
   const renderCuidadorForm = () => (
     <div>
       <div className="text-center mb-4">
@@ -336,6 +432,9 @@ function App() {
     </div>
   );
 
+  /**
+   * Renderiza el dashboard general para clientes
+   */
   const renderDashboard = () => (
     <div className="text-center">
       <h2><i className="bi bi-house-heart text-primary"></i> ¡Bienvenido a PetCare!</h2>
@@ -351,6 +450,11 @@ function App() {
     </div>
   );
 
+  // ===== RENDERIZADO PRINCIPAL =====
+
+  /**
+   * Determina qué contenido mostrar según la vista actual
+   */
   const renderContent = () => {
     switch (currentView) {
       case 'login':
@@ -368,15 +472,20 @@ function App() {
     }
   };
 
+  // ===== LÓGICA DE RENDERIZADO =====
+
   // Si estamos en el dashboard de cuidador, no usar el layout de login
+  // Esto permite que el dashboard tenga su propio diseño completo
   if (currentView === 'cuidador-dashboard') {
     return <CuidadorDashboard onLogout={handleLogout} />;
   }
 
+  // Renderizado principal con layout de login/registro
   return (
     <Layout>
       <div className="login-container">
         <div className="row justify-content-center w-100">
+          {/* Columna del formulario */}
           <div className="col-md-6">
             <div className="card shadow-lg">
               <div className="card-header bg-primary text-white">
@@ -389,6 +498,7 @@ function App() {
                 </h2>
               </div>
               <div className="card-body">
+                {/* Mensajes de estado */}
                 {message && (
                   <div className={`alert alert-${message.type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`} role="alert">
                     {message.text}
@@ -401,8 +511,10 @@ function App() {
                   </div>
                 )}
 
+                {/* Contenido principal */}
                 {renderContent()}
 
+                {/* Navegación entre login y registro */}
                 {currentView !== 'cuidador-form' && currentView !== 'dashboard' && (
                   <>
                     <hr className="my-4" />
@@ -429,6 +541,7 @@ function App() {
             </div>
           </div>
 
+          {/* Columna de imagen decorativa */}
           <div className="col-md-6 d-none d-md-block">
             <div className="position-relative h-100">
               <img 
