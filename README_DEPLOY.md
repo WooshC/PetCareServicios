@@ -153,16 +153,6 @@ docker --version
 docker-compose --version
 ```
 
-#### Configurar Firewall
-```bash
-# Abrir puertos necesarios
-sudo ufw allow 22/tcp    # SSH
-sudo ufw allow 80/tcp    # HTTP
-sudo ufw allow 443/tcp   # HTTPS
-sudo ufw allow 5000/tcp  # API
-sudo ufw allow 3000/tcp  # Frontend
-sudo ufw enable
-```
 
 ### 2. Despliegue del Código
 
@@ -171,45 +161,6 @@ sudo ufw enable
 # Clonar en servidor
 git clone https://github.com/WooshC/PetCareServicios.git
 cd PetCareServicios
-
-# Configurar variables de entorno
-cp .env.example .env
-nano .env  # Editar variables
-```
-
-#### Opción B: Despliegue Automatizado
-```bash
-# Script de despliegue
-#!/bin/bash
-set -e
-
-# Variables
-REPO_URL="https://github.com/WooshC/PetCareServicios.git"
-DEPLOY_DIR="/opt/petcare"
-BACKUP_DIR="/opt/backups"
-
-# Crear directorios
-mkdir -p $DEPLOY_DIR $BACKUP_DIR
-
-# Backup actual (si existe)
-if [ -d "$DEPLOY_DIR" ]; then
-    tar -czf $BACKUP_DIR/petcare-$(date +%Y%m%d-%H%M%S).tar.gz -C $DEPLOY_DIR .
-fi
-
-# Clonar/actualizar código
-cd $DEPLOY_DIR
-git clone $REPO_URL . || git pull
-
-# Desplegar
-docker-compose -f docker-compose.full.yml down
-docker-compose -f docker-compose.full.yml up --build -d
-
-# Verificar salud
-sleep 30
-curl -f http://localhost:5000/api/auth/health || exit 1
-
-echo "Despliegue completado exitosamente"
-```
 
 ### 3. Configuración de Nginx (Opcional)
 
@@ -246,64 +197,6 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-```
-
-### 4. SSL/HTTPS con Let's Encrypt
-
-#### Instalar Certbot
-```bash
-sudo apt update
-sudo apt install certbot python3-certbot-nginx
-
-# Obtener certificado
-sudo certbot --nginx -d tu-dominio.com
-
-# Renovar automáticamente
-sudo crontab -e
-# Agregar: 0 12 * * * /usr/bin/certbot renew --quiet
-```
-
-## 📊 Monitoreo y Logs
-
-### Logs de Aplicación
-```bash
-# Ver logs en tiempo real
-docker-compose -f docker-compose.full.yml logs -f
-
-# Logs específicos
-docker-compose -f docker-compose.full.yml logs -f petcare-api
-docker-compose -f docker-compose.full.yml logs -f petcare-frontend
-docker-compose -f docker-compose.full.yml logs -f petcare-db
-
-# Exportar logs
-docker-compose -f docker-compose.full.yml logs > logs.txt
-```
-
-### Métricas de Rendimiento
-```bash
-# Uso de recursos
-docker stats
-
-# Espacio en disco
-df -h
-
-# Memoria del sistema
-free -h
-
-# CPU y procesos
-top
-```
-
-### Health Checks
-```bash
-# API Health
-curl -f http://localhost:5000/api/auth/health
-
-# Frontend (si está en Docker)
-curl -f http://localhost:3000
-
-# Base de datos
-docker exec petcareservicios-db-1 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q "SELECT 1"
 ```
 
 ## 🔄 Backup y Restauración
@@ -363,10 +256,6 @@ echo "Restauración completada"
 # Actualizar código
 git pull origin main
 
-# Reconstruir y reiniciar
-docker-compose -f docker-compose.full.yml down
-docker-compose -f docker-compose.full.yml up --build -d
-
 # Verificar funcionamiento
 sleep 30
 curl -f http://localhost:5000/api/auth/health
@@ -387,14 +276,6 @@ docker volume prune -f
 docker system prune -a -f
 ```
 
-### Escalado
-```bash
-# Escalar API (si es necesario)
-docker-compose -f docker-compose.full.yml up -d --scale petcare-api=3
-
-# Configurar load balancer
-# Usar Nginx o HAProxy para distribuir carga
-```
 
 ## 🐛 Troubleshooting
 

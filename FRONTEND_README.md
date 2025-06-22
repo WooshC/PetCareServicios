@@ -41,16 +41,6 @@ npm run dev
 # Swagger: http://localhost:5000/swagger
 ```
 
-### Opción 2: Aplicación Completa con Docker
-```bash
-# Desplegar todo (API + Frontend + DB)
-docker-compose -f docker-compose.full.yml up -d
-
-# Acceder a la aplicación
-# Frontend: http://localhost:3000
-# API: http://localhost:5000
-# Swagger: http://localhost:5000/swagger
-```
 
 ## 🛠️ Desarrollo Local
 
