@@ -7,7 +7,7 @@ Guía rápida para desplegar la API de PetCare usando Docker.
 ### 1️⃣ Ejecutar con Docker Compose
 ```bash
 # Clonar y navegar al proyecto
-git clone <url-del-repositorio>
+git clone https://github.com/WooshC/PetCareServicios
 cd PetCareServicios
 
 # Desplegar
