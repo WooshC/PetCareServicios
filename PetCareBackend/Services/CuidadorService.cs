@@ -5,51 +5,84 @@ using PetCareServicios.Services.Interfaces;
 
 namespace PetCareServicios.Services
 {
+    /// <summary>
+    /// Servicio para la gestión de cuidadores usando la nueva base de datos separada
+    /// </summary>
     public class CuidadorService : ICuidadorService
     {
-        private readonly AppDbContext _context;
+        private readonly CuidadoresDbContext _cuidadoresContext;
+        private readonly AppDbContext _authContext;
 
-        public CuidadorService(AppDbContext context)
+        public CuidadorService(CuidadoresDbContext cuidadoresContext, AppDbContext authContext)
         {
-            _context = context;
+            _cuidadoresContext = cuidadoresContext;
+            _authContext = authContext;
         }
 
+        /// <summary>
+        /// Obtiene un cuidador por su ID de usuario
+        /// </summary>
         public async Task<CuidadorResponse?> GetCuidadorByUsuarioIdAsync(int usuarioId)
         {
-            var cuidador = await _context.Cuidadores
-                .Include(c => c.Usuario)
+            var cuidador = await _cuidadoresContext.Cuidadores
                 .FirstOrDefaultAsync(c => c.UsuarioID == usuarioId);
 
-            return cuidador != null ? MapToResponse(cuidador) : null;
+            if (cuidador == null)
+                return null;
+
+            // Obtener información del usuario desde la base de datos de autenticación
+            var usuario = await _authContext.Users.FindAsync(usuarioId);
+            
+            return MapToResponse(cuidador, usuario);
         }
 
+        /// <summary>
+        /// Obtiene un cuidador por su ID
+        /// </summary>
         public async Task<CuidadorResponse?> GetCuidadorByIdAsync(int cuidadorId)
         {
-            var cuidador = await _context.Cuidadores
-                .Include(c => c.Usuario)
+            var cuidador = await _cuidadoresContext.Cuidadores
                 .FirstOrDefaultAsync(c => c.CuidadorID == cuidadorId);
 
-            return cuidador != null ? MapToResponse(cuidador) : null;
+            if (cuidador == null)
+                return null;
+
+            // Obtener información del usuario desde la base de datos de autenticación
+            var usuario = await _authContext.Users.FindAsync(cuidador.UsuarioID);
+            
+            return MapToResponse(cuidador, usuario);
         }
 
+        /// <summary>
+        /// Obtiene todos los cuidadores activos
+        /// </summary>
         public async Task<List<CuidadorResponse>> GetAllCuidadoresAsync()
         {
-            var cuidadores = await _context.Cuidadores
-                .Include(c => c.Usuario)
+            var cuidadores = await _cuidadoresContext.Cuidadores
+                .Where(c => c.Estado == "Activo")
                 .ToListAsync();
 
-            return cuidadores.Select(MapToResponse).ToList();
+            // Obtener todos los usuarios correspondientes
+            var usuarioIds = cuidadores.Select(c => c.UsuarioID).ToList();
+            var usuarios = await _authContext.Users
+                .Where(u => usuarioIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u);
+
+            return cuidadores.Select(c => MapToResponse(c, usuarios.GetValueOrDefault(c.UsuarioID))).ToList();
         }
 
+        /// <summary>
+        /// Crea un nuevo perfil de cuidador
+        /// </summary>
         public async Task<CuidadorResponse> CreateCuidadorAsync(int usuarioId, CuidadorRequest request)
         {
-            // Verificar que el usuario existe
-            var usuario = await _context.Users.FindAsync(usuarioId);
+            // Verificar que el usuario existe en la base de datos de autenticación
+            var usuario = await _authContext.Users.FindAsync(usuarioId);
             if (usuario == null)
                 throw new ArgumentException("Usuario no encontrado");
 
             // Verificar que no existe ya un cuidador para este usuario
-            var cuidadorExistente = await _context.Cuidadores
+            var cuidadorExistente = await _cuidadoresContext.Cuidadores
                 .FirstOrDefaultAsync(c => c.UsuarioID == usuarioId);
             
             if (cuidadorExistente != null)
@@ -64,21 +97,22 @@ namespace PetCareServicios.Services
                 Experiencia = request.Experiencia,
                 HorarioAtencion = request.HorarioAtencion,
                 TarifaPorHora = request.TarifaPorHora,
+                Estado = "Activo",
                 FechaCreacion = DateTime.UtcNow
             };
 
-            _context.Cuidadores.Add(cuidador);
-            await _context.SaveChangesAsync();
+            _cuidadoresContext.Cuidadores.Add(cuidador);
+            await _cuidadoresContext.SaveChangesAsync();
 
-            // Cargar el usuario para la respuesta
-            await _context.Entry(cuidador).Reference(c => c.Usuario).LoadAsync();
-
-            return MapToResponse(cuidador);
+            return MapToResponse(cuidador, usuario);
         }
 
+        /// <summary>
+        /// Actualiza un perfil de cuidador existente
+        /// </summary>
         public async Task<CuidadorResponse?> UpdateCuidadorAsync(int cuidadorId, CuidadorRequest request)
         {
-            var cuidador = await _context.Cuidadores.FindAsync(cuidadorId);
+            var cuidador = await _cuidadoresContext.Cuidadores.FindAsync(cuidadorId);
             if (cuidador == null)
                 return null;
 
@@ -88,40 +122,53 @@ namespace PetCareServicios.Services
             cuidador.Experiencia = request.Experiencia;
             cuidador.HorarioAtencion = request.HorarioAtencion;
             cuidador.TarifaPorHora = request.TarifaPorHora;
+            cuidador.FechaActualizacion = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _cuidadoresContext.SaveChangesAsync();
 
-            // Cargar el usuario para la respuesta
-            await _context.Entry(cuidador).Reference(c => c.Usuario).LoadAsync();
-
-            return MapToResponse(cuidador);
+            // Obtener información del usuario
+            var usuario = await _authContext.Users.FindAsync(cuidador.UsuarioID);
+            
+            return MapToResponse(cuidador, usuario);
         }
 
+        /// <summary>
+        /// Elimina un perfil de cuidador (marca como inactivo)
+        /// </summary>
         public async Task<bool> DeleteCuidadorAsync(int cuidadorId)
         {
-            var cuidador = await _context.Cuidadores.FindAsync(cuidadorId);
+            var cuidador = await _cuidadoresContext.Cuidadores.FindAsync(cuidadorId);
             if (cuidador == null)
                 return false;
 
-            _context.Cuidadores.Remove(cuidador);
-            await _context.SaveChangesAsync();
+            cuidador.Estado = "Inactivo";
+            cuidador.FechaActualizacion = DateTime.UtcNow;
+
+            await _cuidadoresContext.SaveChangesAsync();
             return true;
         }
 
+        /// <summary>
+        /// Verifica el documento de un cuidador
+        /// </summary>
         public async Task<bool> VerificarDocumentoAsync(int cuidadorId)
         {
-            var cuidador = await _context.Cuidadores.FindAsync(cuidadorId);
+            var cuidador = await _cuidadoresContext.Cuidadores.FindAsync(cuidadorId);
             if (cuidador == null)
                 return false;
 
             cuidador.DocumentoVerificado = true;
             cuidador.FechaVerificacion = DateTime.UtcNow;
+            cuidador.FechaActualizacion = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _cuidadoresContext.SaveChangesAsync();
             return true;
         }
 
-        private static CuidadorResponse MapToResponse(Cuidador cuidador)
+        /// <summary>
+        /// Mapea un cuidador a su respuesta DTO
+        /// </summary>
+        private static CuidadorResponse MapToResponse(Cuidador cuidador, User? usuario)
         {
             return new CuidadorResponse
             {
@@ -137,8 +184,9 @@ namespace PetCareServicios.Services
                 DocumentoVerificado = cuidador.DocumentoVerificado,
                 FechaVerificacion = cuidador.FechaVerificacion,
                 FechaCreacion = cuidador.FechaCreacion,
-                NombreUsuario = cuidador.Usuario?.Name ?? string.Empty,
-                EmailUsuario = cuidador.Usuario?.Email ?? string.Empty
+                Estado = cuidador.Estado,
+                NombreUsuario = usuario?.Name ?? string.Empty,
+                EmailUsuario = usuario?.Email ?? string.Empty
             };
         }
     }

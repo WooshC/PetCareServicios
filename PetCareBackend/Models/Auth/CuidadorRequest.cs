@@ -37,6 +37,8 @@ namespace PetCareServicios.Models.Auth
         public bool DocumentoVerificado { get; set; }
         public DateTime? FechaVerificacion { get; set; }
         public DateTime FechaCreacion { get; set; }
+        public DateTime? FechaActualizacion { get; set; }
+        public string Estado { get; set; } = string.Empty;
         public string NombreUsuario { get; set; } = string.Empty;
         public string EmailUsuario { get; set; } = string.Empty;
     }

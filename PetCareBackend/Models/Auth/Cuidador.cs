@@ -37,10 +37,14 @@ namespace PetCareServicios.Models.Auth
 
         public DateTime? FechaVerificacion { get; set; }
 
+        [StringLength(20)]
+        public string Estado { get; set; } = "Activo";
+
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
-        // Navigation property
-        [ForeignKey("UsuarioID")]
-        public virtual User? Usuario { get; set; }
+        public DateTime? FechaActualizacion { get; set; }
+
+        // Nota: No usamos ForeignKey ni Navigation Property porque estamos usando bases de datos separadas
+        // La relación se maneja a nivel de aplicación usando el UsuarioID
     }
 } 

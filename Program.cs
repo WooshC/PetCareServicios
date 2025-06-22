@@ -26,9 +26,13 @@ builder.Services.AddCors(options =>
 });
 
 
-// Configure DbContext with Identity
+// Configure DbContext with Identity (Base de datos de autenticación)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure CuidadoresDbContext (Base de datos de cuidadores)
+builder.Services.AddDbContext<CuidadoresDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("CuidadoresConnection")));
 
 // Add Identity
 builder.Services.AddIdentity<User, UserRole>(options =>
@@ -67,7 +71,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// Apply migrations with retry logic
+// Apply migrations with retry logic for both databases
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -75,16 +79,23 @@ using (var scope = app.Services.CreateScope())
     
     try
     {
-        var db = services.GetRequiredService<AppDbContext>();
+        // Migrate authentication database
+        var authDb = services.GetRequiredService<AppDbContext>();
+        var cuidadoresDb = services.GetRequiredService<CuidadoresDbContext>();
         var maxAttempts = 5;
         
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
             try
             {
-                logger.LogInformation("Applying migrations (attempt {Attempt})...", attempt);
-                db.Database.Migrate();
-                logger.LogInformation("Migrations applied successfully");
+                logger.LogInformation("Applying migrations to PetCareAuth database (attempt {Attempt})...", attempt);
+                authDb.Database.Migrate();
+                logger.LogInformation("PetCareAuth migrations applied successfully");
+                
+                logger.LogInformation("Applying migrations to PetCareCuidadores database (attempt {Attempt})...", attempt);
+                cuidadoresDb.Database.Migrate();
+                logger.LogInformation("PetCareCuidadores migrations applied successfully");
+                
                 break;
             }
             catch (Exception ex) when (attempt < maxAttempts)

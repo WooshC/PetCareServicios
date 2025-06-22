@@ -235,7 +235,7 @@ function App() {
   // Reset validation when switching forms
   useEffect(() => {
     setValidated(false);
-  }, [isLogin]);
+  }, [currentView]);
 
   // ===== RENDERIZADO DE FORMULARIOS =====
 
