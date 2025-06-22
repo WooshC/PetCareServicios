@@ -282,5 +282,276 @@ export const cuidadorService = {
   }
 };
 
+/**
+ * Servicio de gestión de clientes
+ * Maneja CRUD de perfiles de clientes y operaciones específicas
+ */
+export const clienteService = {
+  /**
+   * Obtiene todos los clientes registrados
+   * Requiere permisos de administrador
+   * 
+   * @returns Promise con lista de clientes
+   */
+  async getAllClientes(): Promise<any[]> {
+    const response = await api.get<any[]>('/cliente');
+    return response.data;
+  },
+
+  /**
+   * Obtiene un cliente específico por ID
+   * Requiere permisos de administrador
+   * 
+   * @param id - ID del cliente
+   * @returns Promise con datos del cliente
+   */
+  async getClienteById(id: number): Promise<any> {
+    const response = await api.get<any>(`/cliente/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Crea un nuevo perfil de cliente
+   * FLUJO:
+   * 1. Usa el token JWT para identificar al usuario
+   * 2. Valida que no exista ya un perfil para ese usuario
+   * 3. Crea el perfil con los datos proporcionados
+   * 4. Retorna el perfil creado
+   * 5. Lanza error si ya existe perfil o datos inválidos
+   * 
+   * @param request - Datos del perfil de cliente
+   * @returns Promise con perfil creado
+   */
+  async createCliente(request: { documentoIdentidad: string; telefonoEmergencia: string }): Promise<any> {
+    const response = await api.post<any>('/cliente', request);
+    return response.data;
+  },
+
+  /**
+   * Actualiza un perfil de cliente específico
+   * Requiere permisos de administrador
+   * 
+   * @param id - ID del cliente
+   * @param request - Datos actualizados
+   * @returns Promise con perfil actualizado
+   */
+  async updateCliente(id: number, request: { documentoIdentidad: string; telefonoEmergencia: string }): Promise<any> {
+    const response = await api.put<any>(`/cliente/${id}`, request);
+    return response.data;
+  },
+
+  /**
+   * Actualiza el perfil del cliente autenticado
+   * FLUJO:
+   * 1. Usa el token JWT para identificar al usuario
+   * 2. Busca el perfil asociado
+   * 3. Actualiza con los nuevos datos
+   * 4. Retorna el perfil actualizado
+   * 
+   * @param request - Datos actualizados del perfil
+   * @returns Promise con perfil actualizado
+   */
+  async updateMiPerfil(request: { documentoIdentidad: string; telefonoEmergencia: string }): Promise<any> {
+    const response = await api.put<any>('/cliente/mi-perfil', request);
+    return response.data;
+  },
+
+  /**
+   * Elimina un perfil de cliente
+   * Requiere permisos de administrador
+   * 
+   * @param id - ID del cliente a eliminar
+   * @returns Promise que se resuelve cuando se completa la eliminación
+   */
+  async deleteCliente(id: number): Promise<void> {
+    await api.delete(`/cliente/${id}`);
+  },
+
+  /**
+   * Marca el documento de un cliente como verificado
+   * Requiere permisos de administrador
+   * 
+   * @param id - ID del cliente
+   * @returns Promise con mensaje de confirmación
+   */
+  async verificarDocumento(id: number): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>(`/cliente/${id}/verificar`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene el perfil del cliente autenticado
+   * FLUJO:
+   * 1. Usa el token JWT para identificar al usuario
+   * 2. Busca el perfil de cliente asociado
+   * 3. Retorna los datos del perfil
+   * 4. Lanza error si no existe perfil o no está autenticado
+   * 
+   * @returns Promise con perfil del cliente
+   */
+  async getMiPerfil(): Promise<any> {
+    const response = await api.get<any>('/cliente/mi-perfil');
+    return response.data;
+  }
+};
+
+/**
+ * Servicio de gestión de solicitudes
+ * Maneja CRUD de solicitudes y operaciones específicas
+ */
+export const solicitudService = {
+  /**
+   * Obtiene todas las solicitudes
+   * Requiere permisos de administrador
+   * 
+   * @returns Promise con lista de solicitudes
+   */
+  async getAllSolicitudes(): Promise<any[]> {
+    const response = await api.get<any[]>('/solicitud');
+    return response.data;
+  },
+
+  /**
+   * Obtiene una solicitud específica por ID
+   * 
+   * @param id - ID de la solicitud
+   * @returns Promise con datos de la solicitud
+   */
+  async getSolicitudById(id: number): Promise<any> {
+    const response = await api.get<any>(`/solicitud/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene las solicitudes del cliente autenticado
+   * 
+   * @returns Promise con lista de solicitudes del cliente
+   */
+  async getMisSolicitudes(): Promise<any[]> {
+    const response = await api.get<any[]>('/solicitud/mis-solicitudes');
+    return response.data;
+  },
+
+  /**
+   * Crea una nueva solicitud de servicio
+   * 
+   * @param request - Datos de la solicitud
+   * @returns Promise con solicitud creada
+   */
+  async createSolicitud(request: {
+    tipoServicio: string;
+    descripcion: string;
+    fechaHoraInicio: string;
+    duracionHoras: number;
+    ubicacion: string;
+  }): Promise<any> {
+    const response = await api.post<any>('/solicitud', request);
+    return response.data;
+  },
+
+  /**
+   * Actualiza una solicitud del cliente autenticado
+   * 
+   * @param id - ID de la solicitud
+   * @param request - Datos actualizados
+   * @returns Promise con solicitud actualizada
+   */
+  async updateSolicitud(id: number, request: {
+    tipoServicio: string;
+    descripcion: string;
+    fechaHoraInicio: string;
+    duracionHoras: number;
+    ubicacion: string;
+  }): Promise<any> {
+    const response = await api.put<any>(`/solicitud/${id}`, request);
+    return response.data;
+  },
+
+  /**
+   * Cancela una solicitud del cliente autenticado
+   * 
+   * @param id - ID de la solicitud
+   * @returns Promise con solicitud cancelada
+   */
+  async cancelarSolicitud(id: number): Promise<any> {
+    const response = await api.post<any>(`/solicitud/${id}/cancelar`);
+    return response.data;
+  },
+
+  /**
+   * Elimina una solicitud del cliente autenticado
+   * 
+   * @param id - ID de la solicitud
+   * @returns Promise que se resuelve cuando se completa la eliminación
+   */
+  async deleteSolicitud(id: number): Promise<void> {
+    await api.delete(`/solicitud/${id}`);
+  },
+
+  /**
+   * Obtiene las solicitudes del cuidador autenticado
+   * 
+   * @returns Promise con lista de solicitudes del cuidador
+   */
+  async getMisServicios(): Promise<any[]> {
+    const response = await api.get<any[]>('/solicitud/mis-servicios');
+    return response.data;
+  },
+
+  /**
+   * Obtiene las solicitudes pendientes disponibles
+   * 
+   * @returns Promise con lista de solicitudes pendientes
+   */
+  async getSolicitudesPendientes(): Promise<any[]> {
+    const response = await api.get<any[]>('/solicitud/pendientes');
+    return response.data;
+  },
+
+  /**
+   * Acepta una solicitud pendiente
+   * 
+   * @param id - ID de la solicitud
+   * @returns Promise con solicitud aceptada
+   */
+  async aceptarSolicitud(id: number): Promise<any> {
+    const response = await api.post<any>(`/solicitud/${id}/aceptar`);
+    return response.data;
+  },
+
+  /**
+   * Rechaza una solicitud aceptada
+   * 
+   * @param id - ID de la solicitud
+   * @returns Promise con solicitud rechazada
+   */
+  async rechazarSolicitud(id: number): Promise<any> {
+    const response = await api.post<any>(`/solicitud/${id}/rechazar`);
+    return response.data;
+  },
+
+  /**
+   * Inicia un servicio aceptado
+   * 
+   * @param id - ID de la solicitud
+   * @returns Promise con solicitud iniciada
+   */
+  async iniciarServicio(id: number): Promise<any> {
+    const response = await api.post<any>(`/solicitud/${id}/iniciar`);
+    return response.data;
+  },
+
+  /**
+   * Finaliza un servicio en progreso
+   * 
+   * @param id - ID de la solicitud
+   * @returns Promise con solicitud finalizada
+   */
+  async finalizarServicio(id: number): Promise<any> {
+    const response = await api.post<any>(`/solicitud/${id}/finalizar`);
+    return response.data;
+  }
+};
+
 // Exportar la instancia de axios para uso directo si es necesario
 export default api; 

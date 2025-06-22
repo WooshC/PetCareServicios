@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { authService, cuidadorService } from './services/api';
+import { authService, cuidadorService, clienteService } from './services/api';
 import { LoginRequest, RegisterRequest, AuthResponse } from './types/auth';
 import { CuidadorRequest, CuidadorResponse, RegisterRequestWithRole, LoginRequestWithRole } from './types/cuidador';
 import Layout from './components/Layout';
 import CuidadorForm from './components/CuidadorForm';
 import CuidadorMain from './components/cuidador/CuidadorMain';
 import ChangePasswordForm from './components/ChangePasswordForm';
+import ClienteForm from './components/ClienteForm';
+import ClienteDashboard from './components/cliente/ClienteDashboard';
 // Tipos de vistas disponibles en la aplicación
-type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador-dashboard' | 'change-password';
+type ViewType = 'login' | 'register' | 'cuidador-form' | 'cliente-form' | 'dashboard' | 'cuidador-dashboard' | 'cliente-dashboard' | 'change-password';
 
 /**
  * Componente principal de la aplicación PetCare
@@ -126,7 +128,7 @@ function App() {
         if (registerForm.role === 'Cuidador') {
           setCurrentView('cuidador-form');
         } else {
-          setCurrentView('dashboard');
+          setCurrentView('cliente-form');
         }
       } else {
         setMessage({ 
@@ -174,6 +176,35 @@ function App() {
   };
 
   /**
+   * Maneja el envío del formulario de cliente
+   * FLUJO:
+   * 1. Crea el perfil de cliente en la API
+   * 2. Si es exitoso, redirige al dashboard del cliente
+   * 3. Si falla, muestra mensaje de error
+   */
+  const handleClienteSubmit = async (data: { documentoIdentidad: string; telefonoEmergencia: string }) => {
+    try {
+      // Crear perfil de cliente en la API
+      const response = await clienteService.createCliente(data);
+      
+      setMessage({ 
+        text: '¡Perfil de cliente creado exitosamente!', 
+        type: 'success' 
+      });
+      
+      // Redirigir al dashboard del cliente
+      setCurrentView('cliente-dashboard');
+    } catch (error: any) {
+      setMessage({ 
+        text: error.response?.data?.message || 'Error al crear perfil de cliente', 
+        type: 'error' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
    * Maneja el logout del usuario
    * FLUJO:
    * 1. Elimina el token del localStorage
@@ -212,8 +243,10 @@ function App() {
    */
   const handleRoleChange = (role: 'Cliente' | 'Cuidador') => {
     setSelectedRole(role);
-    setLoginForm(prev => ({ ...prev, role }));
+    // También actualizar el rol en el formulario de registro
     setRegisterForm(prev => ({ ...prev, role }));
+    // También actualizar el rol en el formulario de login
+    setLoginForm(prev => ({ ...prev, role }));
   };
 
   // ===== MANEJADORES DE CAMBIO DE CONTRASEÑA =====
@@ -370,7 +403,10 @@ function App() {
         <button 
           type="button" 
           className="btn btn-link text-decoration-none"
-          onClick={() => setCurrentView('register')}
+          onClick={() => {
+            console.log('Botón de registro clickeado');
+            setCurrentView('register');
+          }}
           disabled={loading}
         >
           <i className="bi bi-person-plus"></i> ¿No tienes una cuenta? Regístrate
@@ -526,16 +562,16 @@ function App() {
    */
   const renderContent = () => {
     switch (currentView) {
-      case 'login':
-        return renderLoginForm();
       case 'register':
         return renderRegisterForm();
       case 'cuidador-form':
-        return renderCuidadorForm();
-      case 'dashboard':
-        return renderDashboard();
+        return <CuidadorForm onSubmit={handleCuidadorSubmit} />;
+      case 'cliente-form':
+        return <ClienteForm onSuccess={() => setCurrentView('cliente-dashboard')} onBack={() => setCurrentView('login')} />;
       case 'cuidador-dashboard':
         return <CuidadorMain onLogout={handleLogout} />;
+      case 'cliente-dashboard':
+        return <ClienteDashboard onLogout={handleLogout} />;
       case 'change-password':
         return <ChangePasswordForm 
           onBack={handleBackToLogin}
@@ -548,10 +584,10 @@ function App() {
 
   // ===== LÓGICA DE RENDERIZADO =====
 
-  // Si estamos en el dashboard de cuidador, no usar el layout de login
+  // Si estamos en el dashboard de cuidador o cliente, no usar el layout de login
   // Esto permite que el dashboard tenga su propio diseño completo
-  if (currentView === 'cuidador-dashboard') {
-    return <CuidadorMain onLogout={handleLogout} />;
+  if (currentView === 'cuidador-dashboard' || currentView === 'cliente-dashboard') {
+    return renderContent();
   }
 
   // Renderizado principal con layout de login/registro
@@ -568,19 +604,19 @@ function App() {
                   {currentView === 'login' && 'Iniciar Sesión'}
                   {currentView === 'register' && 'Registro'}
                   {currentView === 'cuidador-form' && 'Perfil de Cuidador'}
-                  {currentView === 'dashboard' && 'Dashboard'}
+                  {currentView === 'cliente-form' && 'Perfil de Cliente'}
+                  {currentView === 'change-password' && 'Cambiar Contraseña'}
                 </h2>
               </div>
-              <div className="card-body">
-                {/* Mensajes de estado */}
+              <div className="card-body p-4">
+                {/* Mensaje de estado */}
                 {message && (
-                  <div className={`alert alert-${message.type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`} role="alert">
-                    {message.text}
-                    <button 
-                      type="button" 
-                      className="btn-close" 
+                  <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`} role="alert">
+                    <i className={`bi ${message.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'}`}></i> {message.text}
+                    <button
+                      type="button"
+                      className="btn-close"
                       onClick={() => setMessage(null)}
-                      aria-label="Close"
                     ></button>
                   </div>
                 )}
