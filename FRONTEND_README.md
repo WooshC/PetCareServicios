@@ -15,23 +15,33 @@ PetCareServicios/
 │   ├── 📁 src/                # Código fuente React
 │   ├── 📁 public/             # Archivos públicos
 │   └── 📝 package.json        # Dependencias
-├── 🐳 docker-compose.yml      # Solo backend + DB
+├── 🐳 docker-compose.yml      # Backend + DB
 ├── 🐳 docker-compose.full.yml # Backend + Frontend + DB
 └── 📝 README_DEPLOY.md        # Guía de despliegue
 ```
 
 ## 🚀 Despliegue Rápido
 
-### Opción 1: Solo Backend (Recomendado para desarrollo)
+### Opción 1: Backend con Docker + Frontend Manual (Recomendado)
 ```bash
-# Desplegar API + Base de datos
+# 1. Desplegar API + Base de datos
 docker-compose up -d
 
-# Verificar API
+# 2. Verificar API
 curl http://localhost:5000/api/auth/health
+
+# 3. Ejecutar Frontend manualmente
+cd PetCareFrond
+npm install
+npm run dev
+
+# 4. Acceder a la aplicación
+# Frontend: http://localhost:3000
+# API: http://localhost:5000
+# Swagger: http://localhost:5000/swagger
 ```
 
-### Opción 2: Aplicación Completa
+### Opción 2: Aplicación Completa con Docker
 ```bash
 # Desplegar todo (API + Frontend + DB)
 docker-compose -f docker-compose.full.yml up -d
@@ -44,18 +54,22 @@ docker-compose -f docker-compose.full.yml up -d
 
 ## 🛠️ Desarrollo Local
 
-### Backend (.NET)
+### Backend (.NET con Docker)
 ```bash
-# Ejecutar API localmente
-cd PetCareBackend
-dotnet run
+# Ejecutar API con Docker
+docker-compose up -d
 
-# API disponible en: http://localhost:5000
+# Ver logs en tiempo real
+docker-compose logs -f petcare-api
+
+# Reconstruir después de cambios
+docker-compose down
+docker-compose up --build -d
 ```
 
-### Frontend (React)
+### Frontend (React Manual)
 ```bash
-# Instalar dependencias (ver INSTALACION.md)
+# Instalar dependencias
 cd PetCareFrond
 npm install
 
@@ -68,11 +82,12 @@ npm run dev
 ## 📱 Características del Frontend
 
 ### ✅ Funcionalidades
-- **Login/Registro** - Formularios de autenticación
+- **Login/Registro** - Formularios de autenticación funcionales
 - **Diseño Moderno** - UI atractiva con gradientes
 - **TypeScript** - Tipado fuerte
 - **Responsive** - Adaptable a móviles
 - **Manejo de Estados** - Loading, errores, éxito
+- **CORS Configurado** - Comunicación con API Docker
 
 ### 🎨 Diseño
 - **Gradiente de fondo** - Azul a púrpura
@@ -84,6 +99,7 @@ npm run dev
 - **JWT Tokens** - Almacenados en localStorage
 - **Headers automáticos** - Token incluido en requests
 - **Persistencia** - Tokens entre sesiones
+- **CORS Habilitado** - Comunicación con contenedores Docker
 
 ## 🌐 Endpoints de la API
 
@@ -120,8 +136,8 @@ curl -X POST "http://localhost:5000/api/auth/login" \
 ## 🔧 Configuración
 
 ### Variables de Entorno Frontend
-```bash
-# En PetCareFrond/src/services/api.ts
+```typescript
+// En PetCareFrond/src/services/api.ts
 const API_BASE_URL = 'http://localhost:5000/api';
 ```
 
@@ -139,6 +155,21 @@ const API_BASE_URL = 'http://localhost:5000/api';
 }
 ```
 
+### CORS Configurado
+El backend tiene CORS configurado para permitir peticiones desde `http://localhost:3000`:
+```csharp
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+```
+
 ## 🐛 Solución de Problemas
 
 ### Error de PowerShell
@@ -147,14 +178,14 @@ Si no puedes ejecutar npm:
 2. O cambiar política: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`
 
 ### Error de CORS
+- ✅ **Resuelto**: CORS configurado en backend
 - Verificar que API esté en puerto 5000
-- Revisar proxy en `vite.config.ts`
-- Verificar configuración de nginx
+- Verificar que frontend esté en puerto 3000
 
 ### Error de Conexión
-- Verificar que todos los servicios estén ejecutándose
-- Revisar puertos disponibles
-- Verificar firewall
+- Verificar que contenedores estén ejecutándose: `docker ps`
+- Verificar logs: `docker-compose logs petcare-api`
+- Verificar puertos disponibles
 
 ### Error de Dependencias
 ```bash
@@ -163,12 +194,19 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
+### Reconstruir Contenedores
+```bash
+# Después de cambios en el backend
+docker-compose down
+docker-compose up --build -d
+```
+
 ## 📊 Monitoreo
 
 ### Verificar Servicios
 ```bash
 # Estado de contenedores
-docker-compose ps
+docker ps
 
 # Logs en tiempo real
 docker-compose logs -f
@@ -213,14 +251,15 @@ dotnet publish -c Release
 
 ## 📞 Soporte
 
-- 🐛 **Issues**: [GitHub Issues](https://github.com/tu-usuario/PetCareServicios/issues)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/WooshC/PetCareServicios/issues)
 - 📧 **Email**: soporte@petcare.com
 - 💬 **Discord**: [Servidor de Discord](https://discord.gg/petcare)
 
 ---
 
 <div align="center">
-  <p>🚀 <strong>¡PetCare Completo Listo!</strong></p>
+  <p>🚀 <strong>¡PetCare Completo Funcionando!</strong></p>
   <p>🐕 Backend .NET + Frontend React</p>
-  <p>✨ Docker + SQL Server + JWT</p>
+  <p>✨ Docker + SQL Server + JWT + CORS</p>
+  <p>✅ Login y Register Funcionando</p>
 </div> 
