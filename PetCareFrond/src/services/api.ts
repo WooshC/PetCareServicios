@@ -111,6 +111,20 @@ export const authService = {
     return response.data;
   },
 
+  /**
+   * Obtiene el rol del usuario autenticado
+   * FLUJO:
+   * 1. Usa el token JWT para identificar al usuario
+   * 2. Retorna información del usuario y sus roles
+   * 3. Útil para verificar permisos y redirigir correctamente
+   * 
+   * @returns Promise con información del usuario y sus roles
+   */
+  async getMiRol(): Promise<{ userId: number; email: string; name: string; roles: string[] }> {
+    const response = await api.get<{ userId: number; email: string; name: string; roles: string[] }>('/auth/mi-rol');
+    return response.data;
+  },
+
   // ===== GESTIÓN DE TOKENS =====
 
   /**

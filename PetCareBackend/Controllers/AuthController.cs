@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PetCareServicios.Models.Auth;
 using PetCareServicios.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace PetCareServicios.Controllers
 {
@@ -186,6 +187,35 @@ namespace PetCareServicios.Controllers
                 return Ok(response);
             else
                 return BadRequest(response);
+        }
+
+        /// <summary>
+        /// Obtiene el rol del usuario autenticado
+        /// FLUJO:
+        /// 1. Extrae el ID del usuario del token JWT
+        /// 2. Busca el usuario en la base de datos
+        /// 3. Retorna los roles del usuario
+        /// </summary>
+        /// <returns>Roles del usuario autenticado</returns>
+        [HttpGet("mi-rol")]
+        public async Task<ActionResult<object>> GetMiRol()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                return Unauthorized();
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return NotFound("Usuario no encontrado");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            
+            return Ok(new { 
+                userId = user.Id,
+                email = user.Email,
+                name = user.Name,
+                roles = roles.ToList()
+            });
         }
 
         /// <summary>

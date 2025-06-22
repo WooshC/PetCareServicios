@@ -290,28 +290,45 @@ function App() {
       const token = authService.getToken();
       if (token) {
         try {
-          // Intentar obtener el perfil de cuidador para verificar si es cuidador
-          await cuidadorService.getMiPerfil();
-          // Si tiene perfil de cuidador, ir al dashboard de cuidador
-          setCurrentView('cuidador-dashboard');
+          // Obtener el rol real del usuario autenticado
+          const userInfo = await authService.getMiRol();
+          
+          // Verificar si el usuario tiene el rol de Cuidador
+          if (userInfo.roles.includes('Cuidador')) {
+            // Es un cuidador, verificar si tiene perfil
+            try {
+              await cuidadorService.getMiPerfil();
+              setCurrentView('cuidador-dashboard');
+            } catch (error: any) {
+              // Cuidador sin perfil, redirigir al formulario de creación
+              setCurrentView('cuidador-form');
+            }
+          } else if (userInfo.roles.includes('Cliente')) {
+            // Es un cliente, verificar si tiene perfil
+            try {
+              await clienteService.getMiPerfil();
+              setClienteHasProfile(true);
+              setCurrentView('cliente-dashboard');
+            } catch (error: any) {
+              // Cliente sin perfil, redirigir al formulario de creación
+              setClienteHasProfile(false);
+              setCurrentView('cliente-form');
+            }
+          } else {
+            // Usuario sin roles válidos, limpiar token y mostrar login
+            authService.removeToken();
+            setCurrentView('login');
+          }
         } catch (error: any) {
-          // Si no tiene perfil de cuidador, probablemente es un cliente
-          // Verificar si el token es válido haciendo una petición simple
+          // Error al obtener información del usuario (token inválido, etc.)
           if (error.response?.status === 401) {
             // Token inválido, limpiar y mostrar login
             authService.removeToken();
             setCurrentView('login');
           } else {
-            // Token válido pero no es cuidador, verificar si es cliente con perfil
-            try {
-              await clienteService.getMiPerfil();
-              setClienteHasProfile(true);
-              setCurrentView('cliente-dashboard');
-            } catch (clienteError: any) {
-              // Cliente sin perfil, redirigir al formulario de creación
-              setClienteHasProfile(false);
-              setCurrentView('cliente-form');
-            }
+            // Otro error, limpiar token por seguridad
+            authService.removeToken();
+            setCurrentView('login');
           }
         }
       }
