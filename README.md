@@ -35,7 +35,9 @@ PetCareServicios/
 
 ```bash
 # 1. Clonar el repositorio
+
 git clone https://github.com/WooshC/PetCareServicios.git
+
 cd PetCareServicios
 
 # 2. Desplegar backend y base de datos
@@ -43,6 +45,34 @@ docker-compose up -d
 
 # 3. Verificar API
 curl http://localhost:5000/api/auth/health
+
+
+```
+
+### Opción 2: Desarrollo Local
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/WooshC/PetCareServicios
+cd PetCareServicios
+
+# 2. Configurar la base de datos
+# Actualizar la cadena de conexión en appsettings.json
+
+# 3. Ejecutar las migraciones
+dotnet ef database update
+
+# 4. Ejecutar la aplicación
+dotnet run
+```
+
+## 🌐 URLs de Acceso
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| **API** | http://localhost:5000 | Endpoint principal de la API |
+| **Swagger** | http://localhost:5000/swagger | Documentación interactiva |
+| **Base de Datos** | localhost:14433 | SQL Server (usuario: sa, password: YourStrong@Passw0rd) |
 
 # 4. Ejecutar frontend
 cd PetCareFrond
@@ -118,6 +148,7 @@ docker-compose -f docker-compose.full.yml up -d
 ```json
 {
   "ConnectionStrings": {
+
     "DefaultConnection": "Server=db;Database=PetCareAuth;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
   },
   "Jwt": {
@@ -217,20 +248,23 @@ docker-compose -f docker-compose.full.yml up --build -d
 
 ## 📞 Soporte
 
+
 - 🐛 **Issues**: [GitHub Issues](https://github.com/WooshC/PetCareServicios/issues)
 - 📧 **Email**: soporte@petcare.com
-- 💬 **Discord**: [Servidor de Discord](https://discord.gg/petcare)
 
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
 
+
 ---
 
 <div align="center">
+
   <p>🚀 <strong>¡PetCare Servicios Funcionando!</strong></p>
   <p>🐕 Backend .NET + Frontend React</p>
   <p>✨ Docker + SQL Server + JWT + CORS</p>
   <p>✅ Login y Register Operativos</p>
   <p>🔗 API Documentada con Swagger</p>
 </div> 
+
