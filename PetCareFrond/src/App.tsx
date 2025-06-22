@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { authService, cuidadorService } from './services/api';
-import { LoginRequest, RegisterRequest } from './types/auth';
 import { CuidadorRequest, RegisterRequestWithRole, LoginRequestWithRole } from './types/cuidador';
 import Layout from './components/Layout';
 import CuidadorForm from './components/CuidadorForm';
 import CuidadorDashboard from './components/cuidador/CuidadorDashboard';
-
 // Tipos de vistas disponibles en la aplicación
 type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador-dashboard';
 
@@ -15,6 +13,7 @@ type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador
  * según el rol del usuario (Cliente o Cuidador)
  */
 function App() {
+  
   // ===== ESTADOS PRINCIPALES =====
   
   // Vista actual de la aplicación
@@ -231,6 +230,34 @@ function App() {
   };
 
   // ===== EFECTOS =====
+
+  // Verificar token al cargar la aplicación para mantener sesión
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const token = authService.getToken();
+      if (token) {
+        try {
+          // Intentar obtener el perfil de cuidador para verificar si es cuidador
+          await cuidadorService.getMiPerfil();
+          // Si tiene perfil de cuidador, ir al dashboard de cuidador
+          setCurrentView('cuidador-dashboard');
+        } catch (error: any) {
+          // Si no tiene perfil de cuidador, probablemente es un cliente
+          // Verificar si el token es válido haciendo una petición simple
+          if (error.response?.status === 401) {
+            // Token inválido, limpiar y mostrar login
+            authService.removeToken();
+            setCurrentView('login');
+          } else {
+            // Token válido pero no es cuidador, ir al dashboard general
+            setCurrentView('dashboard');
+          }
+        }
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
 
   // Reset validation when switching forms
   useEffect(() => {

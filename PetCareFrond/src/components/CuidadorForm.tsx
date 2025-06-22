@@ -57,9 +57,17 @@ const CuidadorForm: React.FC<CuidadorFormProps> = ({
               placeholder="12345678"
               maxLength={20}
               required
+              readOnly={isEdit}
+              style={isEdit ? { backgroundColor: '#f8f9fa', cursor: 'not-allowed' } : {}}
             />
             <label htmlFor="documentoIdentidad">Documento de Identidad</label>
             <div className="invalid-feedback">Por favor ingrese su documento de identidad</div>
+            {isEdit && (
+              <small className="text-muted">
+                <i className="bi bi-info-circle me-1"></i>
+                El documento no se puede modificar
+              </small>
+            )}
           </div>
         </div>
 
@@ -74,9 +82,17 @@ const CuidadorForm: React.FC<CuidadorFormProps> = ({
               placeholder="+57 300 123 4567"
               maxLength={15}
               required
+              readOnly={isEdit}
+              style={isEdit ? { backgroundColor: '#f8f9fa', cursor: 'not-allowed' } : {}}
             />
             <label htmlFor="telefonoEmergencia">Teléfono de Emergencia</label>
             <div className="invalid-feedback">Por favor ingrese un teléfono válido</div>
+            {isEdit && (
+              <small className="text-muted">
+                <i className="bi bi-info-circle me-1"></i>
+                El teléfono no se puede modificar
+              </small>
+            )}
           </div>
         </div>
       </div>
