@@ -116,7 +116,7 @@ namespace PetCareServicios.Services
             if (solicitud == null)
                 return null;
 
-            solicitud.Estado = "Cancelada";
+            solicitud.Estado = "Rechazada";
             solicitud.FechaActualizacion = DateTime.UtcNow;
 
             await _solicitudesContext.SaveChangesAsync();
