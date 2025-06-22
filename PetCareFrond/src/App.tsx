@@ -35,6 +35,9 @@ function App() {
   // Rol seleccionado por el usuario (Cliente o Cuidador)
   const [selectedRole, setSelectedRole] = useState<'Cliente' | 'Cuidador'>('Cliente');
 
+  // Estado para verificar si el cliente tiene perfil creado
+  const [clienteHasProfile, setClienteHasProfile] = useState<boolean | null>(null);
+
   // ===== ESTADOS DE FORMULARIOS =====
   
   // Formulario de login
@@ -88,7 +91,16 @@ function App() {
         if (loginForm.role === 'Cuidador') {
           setCurrentView('cuidador-dashboard');
         } else {
-          setCurrentView('cliente-dashboard');
+          // Para clientes, verificar si tienen perfil
+          try {
+            await clienteService.getMiPerfil();
+            setClienteHasProfile(true);
+            setCurrentView('cliente-dashboard');
+          } catch (error) {
+            // Si no tiene perfil, redirigir al formulario de creación
+            setClienteHasProfile(false);
+            setCurrentView('cliente-form');
+          }
         }
       } else {
         setMessage({ 
@@ -192,7 +204,8 @@ function App() {
         type: 'success' 
       });
       
-      // Redirigir al dashboard del cliente
+      // Marcar que el cliente tiene perfil y redirigir al dashboard
+      setClienteHasProfile(true);
       setCurrentView('cliente-dashboard');
     } catch (error: any) {
       setMessage({ 
@@ -216,8 +229,7 @@ function App() {
     setCurrentView('login');
     setMessage(null);
     setSelectedRole('Cliente');
-    setLoginForm({ email: '', password: '', role: 'Cliente' });
-    setRegisterForm({ email: '', password: '', name: '', role: 'Cliente' });
+    setClienteHasProfile(null);
   };
 
   // ===== MANEJADORES DE CAMBIOS =====
@@ -290,8 +302,16 @@ function App() {
             authService.removeToken();
             setCurrentView('login');
           } else {
-            // Token válido pero no es cuidador, ir al dashboard del cliente
-            setCurrentView('cliente-dashboard');
+            // Token válido pero no es cuidador, verificar si es cliente con perfil
+            try {
+              await clienteService.getMiPerfil();
+              setClienteHasProfile(true);
+              setCurrentView('cliente-dashboard');
+            } catch (clienteError: any) {
+              // Cliente sin perfil, redirigir al formulario de creación
+              setClienteHasProfile(false);
+              setCurrentView('cliente-form');
+            }
           }
         }
       }

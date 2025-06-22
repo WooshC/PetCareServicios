@@ -36,7 +36,7 @@ namespace PetCareServicios.Services
                 };
             }
 
-            var token = GenerateJwtToken(user);
+            var token = await GenerateJwtToken(user);
             
             return new AuthResponse 
             { 
@@ -68,7 +68,7 @@ namespace PetCareServicios.Services
                 };
             }
 
-            var token = GenerateJwtToken(user);
+            var token = await GenerateJwtToken(user);
             
             return new AuthResponse 
             { 
@@ -78,10 +78,14 @@ namespace PetCareServicios.Services
             };
         }
 
-        public string GenerateJwtToken(User user)
+        public async Task<string> GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
             var key = Encoding.ASCII.GetBytes(jwtSettings["Key"] ?? "default-key-32-characters-long");
+
+            // Obtener los roles del usuario
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var roleClaims = userRoles.Select(role => new Claim(ClaimTypes.Role, role));
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -91,7 +95,7 @@ namespace PetCareServicios.Services
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Email, user.Email ?? ""),
                     new Claim(ClaimTypes.Name, user.Name)
-                }),
+                }.Concat(roleClaims)),
                 Expires = DateTime.UtcNow.AddHours(24),
                 Issuer = jwtSettings["Issuer"],
                 Audience = jwtSettings["Audience"],

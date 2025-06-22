@@ -6,7 +6,7 @@ namespace PetCareServicios.Services.Interfaces
     {
         Task<AuthResponse> LoginAsync(LoginRequest request);
         Task<AuthResponse> RegisterAsync(User user, string password);
-        string GenerateJwtToken(User user);
+        Task<string> GenerateJwtToken(User user);
         
         // ===== MÉTODOS DE RECUPERACIÓN DE CONTRASEÑA =====
         Task<PasswordResetResponse> RequestPasswordResetAsync(PasswordResetRequest request);
