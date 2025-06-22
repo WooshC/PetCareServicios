@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PetCareServicios.Models.Solicitudes;
+using PetCareServicios.Models.Auth;
 using PetCareServicios.Services.Interfaces;
 using System.Security.Claims;
 
@@ -17,10 +18,14 @@ namespace PetCareServicios.Controllers
     public class SolicitudController : ControllerBase
     {
         private readonly ISolicitudService _solicitudService;
+        private readonly IClienteService _clienteService;
+        private readonly ICuidadorService _cuidadorService;
 
-        public SolicitudController(ISolicitudService solicitudService)
+        public SolicitudController(ISolicitudService solicitudService, IClienteService clienteService, ICuidadorService cuidadorService)
         {
             _solicitudService = solicitudService;
+            _clienteService = clienteService;
+            _cuidadorService = cuidadorService;
         }
 
         // ===== OPERACIONES GENERALES =====
@@ -67,7 +72,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cliente")]
         public async Task<ActionResult<List<SolicitudResponse>>> GetMisSolicitudes()
         {
-            var clienteId = GetCurrentClienteId();
+            var clienteId = await GetCurrentClienteId();
             if (clienteId == null)
                 return Unauthorized("No tienes un perfil de cliente");
 
@@ -89,7 +94,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cliente")]
         public async Task<ActionResult<SolicitudResponse>> CreateSolicitud([FromBody] SolicitudRequest request)
         {
-            var clienteId = GetCurrentClienteId();
+            var clienteId = await GetCurrentClienteId();
             if (clienteId == null)
                 return Unauthorized("No tienes un perfil de cliente");
 
@@ -111,7 +116,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cliente")]
         public async Task<ActionResult<SolicitudResponse>> UpdateSolicitud(int id, [FromBody] SolicitudRequest request)
         {
-            var clienteId = GetCurrentClienteId();
+            var clienteId = await GetCurrentClienteId();
             if (clienteId == null)
                 return Unauthorized("No tienes un perfil de cliente");
 
@@ -137,7 +142,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cliente")]
         public async Task<ActionResult<SolicitudResponse>> CancelarSolicitud(int id)
         {
-            var clienteId = GetCurrentClienteId();
+            var clienteId = await GetCurrentClienteId();
             if (clienteId == null)
                 return Unauthorized("No tienes un perfil de cliente");
 
@@ -158,7 +163,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cliente")]
         public async Task<ActionResult> DeleteSolicitud(int id)
         {
-            var clienteId = GetCurrentClienteId();
+            var clienteId = await GetCurrentClienteId();
             if (clienteId == null)
                 return Unauthorized("No tienes un perfil de cliente");
 
@@ -167,6 +172,53 @@ namespace PetCareServicios.Controllers
                 return NotFound("Solicitud no encontrada o no se puede eliminar");
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Obtiene los cuidadores disponibles para una solicitud
+        /// FLUJO:
+        /// 1. Extrae el ID del usuario del token JWT
+        /// 2. Busca el perfil de cliente asociado
+        /// 3. Retorna la lista de cuidadores disponibles
+        /// </summary>
+        /// <returns>Lista de cuidadores disponibles</returns>
+        [HttpGet("cuidadores-disponibles")]
+        [Authorize(Roles = "Cliente")]
+        public async Task<ActionResult<List<CuidadorResponse>>> GetCuidadoresDisponibles()
+        {
+            var clienteId = await GetCurrentClienteId();
+            if (clienteId == null)
+                return Unauthorized("No tienes un perfil de cliente");
+
+            var cuidadores = await _solicitudService.GetCuidadoresDisponiblesAsync();
+            return Ok(cuidadores);
+        }
+
+        /// <summary>
+        /// Asigna un cuidador específico a una solicitud
+        /// FLUJO:
+        /// 1. Extrae el ID del usuario del token JWT
+        /// 2. Busca el perfil de cliente asociado
+        /// 3. Verifica que la solicitud pertenece al cliente
+        /// 4. Asigna el cuidador a la solicitud
+        /// 5. Cambia el estado a "Asignada"
+        /// </summary>
+        /// <param name="solicitudId">ID de la solicitud</param>
+        /// <param name="request">ID del cuidador a asignar</param>
+        /// <returns>Solicitud actualizada</returns>
+        [HttpPost("{solicitudId}/asignar-cuidador")]
+        [Authorize(Roles = "Cliente")]
+        public async Task<ActionResult<SolicitudResponse>> AsignarCuidador(int solicitudId, [FromBody] AsignarCuidadorRequest request)
+        {
+            var clienteId = await GetCurrentClienteId();
+            if (clienteId == null)
+                return Unauthorized("No tienes un perfil de cliente");
+
+            var solicitud = await _solicitudService.AsignarCuidadorAsync(solicitudId, clienteId.Value, request.CuidadorID);
+            if (solicitud == null)
+                return NotFound("Solicitud no encontrada o no se puede asignar el cuidador");
+
+            return Ok(solicitud);
         }
 
         // ===== OPERACIONES PARA CUIDADORES =====
@@ -183,7 +235,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cuidador")]
         public async Task<ActionResult<List<SolicitudResponse>>> GetMisServicios()
         {
-            var cuidadorId = GetCurrentCuidadorId();
+            var cuidadorId = await GetCurrentCuidadorId();
             if (cuidadorId == null)
                 return Unauthorized("No tienes un perfil de cuidador");
 
@@ -217,7 +269,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cuidador")]
         public async Task<ActionResult<SolicitudResponse>> AceptarSolicitud(int id)
         {
-            var cuidadorId = GetCurrentCuidadorId();
+            var cuidadorId = await GetCurrentCuidadorId();
             if (cuidadorId == null)
                 return Unauthorized("No tienes un perfil de cuidador");
 
@@ -237,7 +289,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cuidador")]
         public async Task<ActionResult<SolicitudResponse>> RechazarSolicitud(int id)
         {
-            var cuidadorId = GetCurrentCuidadorId();
+            var cuidadorId = await GetCurrentCuidadorId();
             if (cuidadorId == null)
                 return Unauthorized("No tienes un perfil de cuidador");
 
@@ -257,7 +309,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cuidador")]
         public async Task<ActionResult<SolicitudResponse>> IniciarServicio(int id)
         {
-            var cuidadorId = GetCurrentCuidadorId();
+            var cuidadorId = await GetCurrentCuidadorId();
             if (cuidadorId == null)
                 return Unauthorized("No tienes un perfil de cuidador");
 
@@ -277,7 +329,7 @@ namespace PetCareServicios.Controllers
         [Authorize(Roles = "Cuidador")]
         public async Task<ActionResult<SolicitudResponse>> FinalizarServicio(int id)
         {
-            var cuidadorId = GetCurrentCuidadorId();
+            var cuidadorId = await GetCurrentCuidadorId();
             if (cuidadorId == null)
                 return Unauthorized("No tienes un perfil de cuidador");
 
@@ -373,34 +425,30 @@ namespace PetCareServicios.Controllers
         /// Obtiene el ID del cliente autenticado
         /// </summary>
         /// <returns>ID del cliente o null si no se puede obtener</returns>
-        private int? GetCurrentClienteId()
+        private async Task<int?> GetCurrentClienteId()
         {
-            // Este método debería obtener el ClienteID desde el perfil del usuario
-            // Por ahora, usamos el UsuarioID como referencia
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 return null;
 
-            // En una implementación real, aquí buscarías el ClienteID asociado al UsuarioID
-            // Por simplicidad, asumimos que el UsuarioID es el ClienteID
-            return userId;
+            // Buscar el perfil de cliente asociado al usuario
+            var cliente = await _clienteService.GetClienteByUsuarioIdAsync(userId);
+            return cliente?.ClienteID;
         }
 
         /// <summary>
         /// Obtiene el ID del cuidador autenticado
         /// </summary>
         /// <returns>ID del cuidador o null si no se puede obtener</returns>
-        private int? GetCurrentCuidadorId()
+        private async Task<int?> GetCurrentCuidadorId()
         {
-            // Este método debería obtener el CuidadorID desde el perfil del usuario
-            // Por ahora, usamos el UsuarioID como referencia
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
                 return null;
 
-            // En una implementación real, aquí buscarías el CuidadorID asociado al UsuarioID
-            // Por simplicidad, asumimos que el UsuarioID es el CuidadorID
-            return userId;
+            // Buscar el perfil de cuidador asociado al usuario
+            var cuidador = await _cuidadorService.GetCuidadorByUsuarioIdAsync(userId);
+            return cuidador?.CuidadorID;
         }
     }
 } 

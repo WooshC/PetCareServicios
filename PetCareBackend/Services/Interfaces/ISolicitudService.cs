@@ -1,4 +1,5 @@
 using PetCareServicios.Models.Solicitudes;
+using PetCareServicios.Models.Auth;
 
 namespace PetCareServicios.Services.Interfaces
 {
@@ -14,6 +15,8 @@ namespace PetCareServicios.Services.Interfaces
         Task<SolicitudResponse?> UpdateSolicitudAsync(int solicitudId, SolicitudRequest request);
         Task<bool> DeleteSolicitudAsync(int solicitudId, int clienteId);
         Task<SolicitudResponse?> CancelarSolicitudAsync(int solicitudId, int clienteId);
+        Task<List<CuidadorResponse>> GetCuidadoresDisponiblesAsync();
+        Task<SolicitudResponse?> AsignarCuidadorAsync(int solicitudId, int clienteId, int cuidadorId);
         
         // ===== OPERACIONES PARA CUIDADORES =====
         Task<List<SolicitudResponse>> GetSolicitudesByCuidadorAsync(int cuidadorId);

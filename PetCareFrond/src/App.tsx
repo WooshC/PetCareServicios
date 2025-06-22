@@ -88,7 +88,7 @@ function App() {
         if (loginForm.role === 'Cuidador') {
           setCurrentView('cuidador-dashboard');
         } else {
-          setCurrentView('dashboard');
+          setCurrentView('cliente-dashboard');
         }
       } else {
         setMessage({ 
@@ -290,8 +290,8 @@ function App() {
             authService.removeToken();
             setCurrentView('login');
           } else {
-            // Token válido pero no es cuidador, ir al dashboard general
-            setCurrentView('dashboard');
+            // Token válido pero no es cuidador, ir al dashboard del cliente
+            setCurrentView('cliente-dashboard');
           }
         }
       }

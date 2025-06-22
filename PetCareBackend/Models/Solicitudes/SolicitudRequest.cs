@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using PetCareServicios.Models.Cuidadores;
 
 namespace PetCareServicios.Models.Solicitudes
 {
@@ -55,5 +56,11 @@ namespace PetCareServicios.Models.Solicitudes
     {
         [Required]
         public string Estado { get; set; } = string.Empty;
+    }
+
+    public class AsignarCuidadorRequest
+    {
+        [Required]
+        public int CuidadorID { get; set; }
     }
 } 

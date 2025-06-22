@@ -550,6 +550,20 @@ export const solicitudService = {
   async finalizarServicio(id: number): Promise<any> {
     const response = await api.post<any>(`/solicitud/${id}/finalizar`);
     return response.data;
+  },
+
+  // ===== NUEVOS MÉTODOS PARA ASIGNACIÓN DE CUIDADORES =====
+
+  async getCuidadoresDisponibles(): Promise<CuidadorResponse[]> {
+    const response = await api.get('/solicitud/cuidadores-disponibles');
+    return response.data;
+  },
+
+  async asignarCuidador(solicitudId: number, cuidadorId: number): Promise<any> {
+    const response = await api.post(`/solicitud/${solicitudId}/asignar-cuidador`, {
+      cuidadorID: cuidadorId
+    });
+    return response.data;
   }
 };
 

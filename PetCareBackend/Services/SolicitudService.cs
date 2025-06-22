@@ -13,11 +13,13 @@ namespace PetCareServicios.Services
     {
         private readonly SolicitudesDbContext _solicitudesContext;
         private readonly AppDbContext _authContext;
+        private readonly CuidadoresDbContext _cuidadoresContext;
 
-        public SolicitudService(SolicitudesDbContext solicitudesContext, AppDbContext authContext)
+        public SolicitudService(SolicitudesDbContext solicitudesContext, AppDbContext authContext, CuidadoresDbContext cuidadoresContext)
         {
             _solicitudesContext = solicitudesContext;
             _authContext = authContext;
+            _cuidadoresContext = cuidadoresContext;
         }
 
         // ===== OPERACIONES GENERALES =====
@@ -279,6 +281,79 @@ namespace PetCareServicios.Services
                 .ToListAsync();
 
             return await MapToResponseList(solicitudes);
+        }
+
+        // ===== NUEVOS MÉTODOS PARA ASIGNACIÓN DE CUIDADORES =====
+
+        public async Task<List<CuidadorResponse>> GetCuidadoresDisponiblesAsync()
+        {
+            // Obtener todos los cuidadores activos y verificados
+            var cuidadores = await _cuidadoresContext.Cuidadores
+                .Where(c => c.Estado == "Activo" && c.DocumentoVerificado)
+                .ToListAsync();
+
+            // Obtener información de usuarios correspondientes
+            var usuarioIds = cuidadores.Select(c => c.UsuarioID).ToList();
+            var usuarios = await _authContext.Users
+                .Where(u => usuarioIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u);
+
+            // Mapear a CuidadorResponse
+            var cuidadoresResponse = new List<CuidadorResponse>();
+            foreach (var cuidador in cuidadores)
+            {
+                var usuario = usuarios.GetValueOrDefault(cuidador.UsuarioID);
+                cuidadoresResponse.Add(new CuidadorResponse
+                {
+                    CuidadorID = cuidador.CuidadorID,
+                    UsuarioID = cuidador.UsuarioID,
+                    DocumentoIdentidad = cuidador.DocumentoIdentidad,
+                    TelefonoEmergencia = cuidador.TelefonoEmergencia,
+                    Biografia = cuidador.Biografia,
+                    Experiencia = cuidador.Experiencia,
+                    HorarioAtencion = cuidador.HorarioAtencion,
+                    TarifaPorHora = cuidador.TarifaPorHora,
+                    CalificacionPromedio = cuidador.CalificacionPromedio,
+                    DocumentoVerificado = cuidador.DocumentoVerificado,
+                    FechaVerificacion = cuidador.FechaVerificacion,
+                    FechaCreacion = cuidador.FechaCreacion,
+                    Estado = cuidador.Estado,
+                    NombreUsuario = usuario?.Name ?? string.Empty,
+                    EmailUsuario = usuario?.Email ?? string.Empty
+                });
+            }
+
+            return cuidadoresResponse;
+        }
+
+        public async Task<SolicitudResponse?> AsignarCuidadorAsync(int solicitudId, int clienteId, int cuidadorId)
+        {
+            // Verificar que la solicitud existe y pertenece al cliente
+            var solicitud = await _solicitudesContext.Solicitudes
+                .FirstOrDefaultAsync(s => s.SolicitudID == solicitudId && s.ClienteID == clienteId);
+
+            if (solicitud == null)
+                return null;
+
+            // Verificar que la solicitud esté en estado "Pendiente"
+            if (solicitud.Estado != "Pendiente")
+                return null;
+
+            // Verificar que el cuidador existe y está activo
+            var cuidador = await _cuidadoresContext.Cuidadores
+                .FirstOrDefaultAsync(c => c.CuidadorID == cuidadorId && c.Estado == "Activo");
+
+            if (cuidador == null)
+                return null;
+
+            // Asignar el cuidador a la solicitud
+            solicitud.CuidadorID = cuidadorId;
+            solicitud.Estado = "Asignada";
+            solicitud.FechaActualizacion = DateTime.UtcNow;
+
+            await _solicitudesContext.SaveChangesAsync();
+
+            return await MapToResponse(solicitud);
         }
 
         // ===== MÉTODOS AUXILIARES =====
