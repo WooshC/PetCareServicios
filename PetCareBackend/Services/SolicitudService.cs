@@ -287,9 +287,9 @@ namespace PetCareServicios.Services
 
         public async Task<List<CuidadorResponse>> GetCuidadoresDisponiblesAsync()
         {
-            // Obtener todos los cuidadores activos y verificados
+            // Obtener todos los cuidadores activos (sin filtrar por verificación)
             var cuidadores = await _cuidadoresContext.Cuidadores
-                .Where(c => c.Estado == "Activo" && c.DocumentoVerificado)
+                .Where(c => c.Estado == "Activo")
                 .ToListAsync();
 
             // Obtener información de usuarios correspondientes
