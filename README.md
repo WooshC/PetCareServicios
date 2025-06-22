@@ -1,270 +1,265 @@
-# 🐕 PetCare Servicios
+# 🐕 PetCare - Sistema de Cuidado de Mascotas
 
-Aplicación completa de PetCare con **Backend .NET Core** y **Frontend React**, desplegada con Docker.
+Sistema completo de cuidado de mascotas con backend .NET y frontend React, incluyendo autenticación, roles de usuario y gestión de cuidadores.
 
-## 🚀 Estado del Proyecto
+## 🚀 Características Principales
 
-✅ **Backend**: API .NET Core con autenticación JWT  
-✅ **Frontend**: React con TypeScript y diseño moderno  
-✅ **Base de Datos**: SQL Server con Entity Framework  
-✅ **Docker**: Contenedores configurados y funcionando  
-✅ **CORS**: Configurado para comunicación frontend-backend  
-✅ **Autenticación**: Login y registro funcionando  
+### ✅ Autenticación y Roles
+- **Sistema de Login/Registro** con selección de roles
+- **Roles de Usuario**: Cliente y Cuidador
+- **Autenticación JWT** con tokens seguros
+- **Validación de roles** en el backend
+
+### ✅ Gestión de Cuidadores
+- **Perfil de Cuidador** completo con información detallada
+- **Documento de identidad** y verificación
+- **Biografía y experiencia** personalizada
+- **Horarios de atención** y tarifas
+- **Calificación promedio** automática
+- **Verificación de documentos** por administradores
+
+### ✅ Base de Datos
+- **SQL Server** con Entity Framework Core
+- **Migraciones automáticas** con retry logic
+- **Relaciones** entre usuarios y cuidadores
+- **Índices optimizados** para consultas rápidas
+
+### ✅ Frontend Moderno
+- **React 18** con TypeScript
+- **Bootstrap 5** para diseño responsive
+- **Formularios interactivos** con validación
+- **Navegación fluida** entre vistas
+- **Mensajes de estado** en tiempo real
 
 ## 🏗️ Arquitectura
 
 ```
 PetCareServicios/
 ├── 📁 PetCareBackend/          # API .NET Core
-│   ├── 📁 Controllers/         # Controladores de API
+│   ├── 📁 Controllers/         # Controladores API
 │   ├── 📁 Models/             # Modelos de datos
 │   ├── 📁 Services/           # Lógica de negocio
-│   └── 📁 Data/               # Entity Framework
+│   └── 📁 Data/               # Contexto de base de datos
 ├── 📁 PetCareFrond/           # Frontend React
-│   ├── 📁 src/                # Código fuente React
-│   ├── 📁 public/             # Archivos públicos
-│   └── 📝 package.json        # Dependencias
-├── 🐳 docker-compose.yml      # Backend + DB
-├── 🐳 docker-compose.full.yml # Backend + Frontend + DB
-└── 📝 README_DEPLOY.md        # Guía de despliegue
-```
-
-## 🚀 Inicio Rápido
-
-### Opción 1: Backend Docker + Frontend Manual (Recomendado)
-
-```bash
-# 1. Clonar el repositorio
-
-git clone https://github.com/WooshC/PetCareServicios.git
-
-cd PetCareServicios
-
-# 2. Desplegar backend y base de datos
-docker-compose up -d
-
-# 3. Verificar API
-curl http://localhost:5000/api/auth/health
-
-
-```
-
-### Opción 2: Desarrollo Local
-
-```bash
-# 1. Clonar el repositorio
-git clone https://github.com/WooshC/PetCareServicios
-cd PetCareServicios
-
-# 2. Configurar la base de datos
-# Actualizar la cadena de conexión en appsettings.json
-
-# 3. Ejecutar las migraciones
-dotnet ef database update
-
-# 4. Ejecutar la aplicación
-dotnet run
-```
-
-## 🌐 URLs de Acceso
-
-| Servicio | URL | Descripción |
-|----------|-----|-------------|
-| **API** | http://localhost:5000 | Endpoint principal de la API |
-| **Swagger** | http://localhost:5000/swagger | Documentación interactiva |
-| **Base de Datos** | localhost:14433 | SQL Server (usuario: sa, password: YourStrong@Passw0rd) |
-
-# 4. Ejecutar frontend
-cd PetCareFrond
-npm install
-npm run dev
-
-# 5. Acceder a la aplicación
-# Frontend: http://localhost:3000
-# API: http://localhost:5000
-# Swagger: http://localhost:5000/swagger
-```
-
-### Opción 2: Todo con Docker
-
-```bash
-# Desplegar aplicación completa
-docker-compose -f docker-compose.full.yml up -d
-
-# Acceder a la aplicación
-# Frontend: http://localhost:3000
-# API: http://localhost:5000
+│   ├── 📁 src/
+│   │   ├── 📁 components/     # Componentes React
+│   │   ├── 📁 services/       # Servicios API
+│   │   └── 📁 types/          # Tipos TypeScript
+└── 📁 Migrations/             # Migraciones de BD
 ```
 
 ## 🛠️ Tecnologías
 
 ### Backend
-- **.NET 8** - Framework de desarrollo
-- **Entity Framework Core** - ORM para base de datos
-- **ASP.NET Core Identity** - Sistema de autenticación
-- **JWT Bearer** - Tokens de autenticación
+- **.NET 8** - Framework principal
+- **Entity Framework Core** - ORM
 - **SQL Server** - Base de datos
-- **Swagger** - Documentación de API
+- **Identity** - Autenticación y autorización
+- **JWT** - Tokens de autenticación
+- **Docker** - Contenedorización
 
 ### Frontend
 - **React 18** - Biblioteca de UI
 - **TypeScript** - Tipado estático
 - **Vite** - Build tool rápido
+- **Bootstrap 5** - Framework CSS
 - **Axios** - Cliente HTTP
-- **CSS3** - Estilos modernos
 
-### DevOps
-- **Docker** - Contenedores
-- **Docker Compose** - Orquestación
-- **CORS** - Cross-Origin Resource Sharing
+## 📦 Instalación y Configuración
 
-## 📱 Funcionalidades
+### Prerrequisitos
+- Docker Desktop
+- Node.js 16+
+- .NET 8 SDK (para desarrollo local)
 
-### ✅ Implementadas
-- **Autenticación JWT** - Login y registro seguros
-- **Base de Datos** - SQL Server con migraciones
-- **API RESTful** - Endpoints documentados
-- **Frontend React** - UI moderna y responsive
-- **CORS Configurado** - Comunicación frontend-backend
-- **Docker** - Despliegue containerizado
-
-### 🔄 En Desarrollo
-- Dashboard de usuario
-- Gestión de mascotas
-- Citas veterinarias
-- Historial médico
-
-## 🌐 Endpoints de la API
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `POST` | `/api/auth/register` | Registrar usuario |
-| `POST` | `/api/auth/login` | Iniciar sesión |
-| `GET` | `/api/auth/health` | Verificar estado |
-
-## 🔧 Configuración
-
-### Variables de Entorno
-```json
-{
-  "ConnectionStrings": {
-
-    "DefaultConnection": "Server=db;Database=PetCareAuth;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
-  },
-  "Jwt": {
-    "Key": "YourSuperSecretKeyForJWTTokenGeneration",
-    "Issuer": "PetCareApp",
-    "Audience": "PetCareUsers"
-  }
-}
+### 1. Clonar el Repositorio
+```bash
+git clone https://github.com/WooshC/PetCareServicios.git
+cd PetCareServicios
 ```
 
-### CORS
-Configurado para permitir peticiones desde `http://localhost:3000`:
-```csharp
-policy.WithOrigins("http://localhost:3000")
-      .AllowAnyHeader()
-      .AllowAnyMethod()
-      .AllowCredentials();
+### 2. Desplegar Backend con Docker
+```bash
+# Construir y ejecutar contenedores
+docker-compose up --build -d
+
+# Verificar que estén ejecutándose
+docker ps
+
+# Ver logs si es necesario
+docker-compose logs -f petcare-api
+```
+
+### 3. Configurar Frontend
+```bash
+cd PetCareFrond
+
+# Instalar dependencias
+npm install
+
+# Ejecutar en desarrollo
+npm run dev
+```
+
+### 4. Acceder a la Aplicación
+- **Frontend**: http://localhost:3000
+- **API**: http://localhost:5000
+- **Swagger**: http://localhost:5000/swagger
+
+## 🔐 Funcionalidades de Autenticación
+
+### Registro de Usuarios
+1. **Seleccionar rol**: Cliente o Cuidador
+2. **Completar formulario**: Nombre, email, contraseña
+3. **Validación automática** de datos
+4. **Asignación de rol** en la base de datos
+
+### Login con Roles
+1. **Seleccionar tipo de usuario**
+2. **Ingresar credenciales**
+3. **Verificación de rol** en el backend
+4. **Redirección automática** según el rol
+
+### Flujo de Cuidador
+1. **Registro como Cuidador**
+2. **Completar perfil** con información adicional
+3. **Documento de identidad** y teléfono de emergencia
+4. **Biografía y experiencia** personalizada
+5. **Configurar horarios** y tarifas
+
+## 📊 Base de Datos
+
+### Tabla Cuidadores
+```sql
+CREATE TABLE Cuidadores (
+    CuidadorID INT IDENTITY(1,1) PRIMARY KEY,
+    UsuarioID INT NOT NULL FOREIGN KEY REFERENCES AspNetUsers(Id),
+    DocumentoIdentidad VARCHAR(20) NOT NULL,
+    TelefonoEmergencia VARCHAR(15) NOT NULL,
+    Biografia TEXT,
+    Experiencia TEXT,
+    HorarioAtencion VARCHAR(100),
+    TarifaPorHora DECIMAL(10,2),
+    CalificacionPromedio DECIMAL(3,2) DEFAULT 0.0,
+    DocumentoVerificado BIT DEFAULT 0,
+    FechaVerificacion DATETIME,
+    FechaCreacion DATETIME DEFAULT GETUTCDATE(),
+    CONSTRAINT UQ_Cuidador_Usuario UNIQUE (UsuarioID)
+);
+```
+
+### Relaciones
+- **Usuario → Cuidador**: 1:1 (Un usuario puede tener un perfil de cuidador)
+- **Cascade Delete**: Al eliminar un usuario se elimina su perfil de cuidador
+- **Índice único** en UsuarioID para evitar duplicados
+
+## 🔌 API Endpoints
+
+### Autenticación
+- `POST /api/auth/login` - Login con rol
+- `POST /api/auth/register` - Registro con rol
+- `GET /api/auth/health` - Estado de la API
+
+### Cuidadores
+- `GET /api/cuidador` - Listar todos los cuidadores
+- `GET /api/cuidador/{id}` - Obtener cuidador por ID
+- `GET /api/cuidador/mi-perfil` - Obtener mi perfil de cuidador
+- `POST /api/cuidador` - Crear perfil de cuidador
+- `PUT /api/cuidador/{id}` - Actualizar cuidador
+- `PUT /api/cuidador/mi-perfil` - Actualizar mi perfil
+- `DELETE /api/cuidador/{id}` - Eliminar cuidador (Admin)
+- `POST /api/cuidador/{id}/verificar` - Verificar documento (Admin)
+
+## 🎨 Interfaz de Usuario
+
+### Características del Diseño
+- **Diseño responsive** para móviles y desktop
+- **Gradientes modernos** y animaciones suaves
+- **Formularios con validación** en tiempo real
+- **Mensajes de estado** claros y visibles
+- **Navegación intuitiva** entre vistas
+
+### Componentes Principales
+- **Layout**: Header y footer compartidos
+- **CuidadorForm**: Formulario completo para perfiles de cuidador
+- **RoleSelector**: Selección de roles con botones interactivos
+- **Dashboard**: Vista principal después del login
+
+## 🚀 Despliegue
+
+### Producción con Docker
+```bash
+# Desplegar todo el stack
+docker-compose -f docker-compose.full.yml up -d
+
+# Verificar servicios
+docker-compose ps
+
+# Ver logs
+docker-compose logs -f
+```
+
+### Variables de Entorno
+```env
+# Base de datos
+ConnectionStrings__DefaultConnection=Server=db;Database=PetCareAuth;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+
+# JWT
+Jwt__Key=your-super-secret-key-32-characters-long
+Jwt__Issuer=PetCare
+Jwt__Audience=PetCareUsers
 ```
 
 ## 🐛 Solución de Problemas
 
 ### Error de CORS
-- ✅ **Resuelto**: CORS configurado en backend
-- Verificar que API esté en puerto 5000
-- Verificar que frontend esté en puerto 3000
+- ✅ **Resuelto**: CORS configurado para `http://localhost:3000`
+- Verificar que la API esté en puerto 5000
+- Revisar logs: `docker-compose logs petcare-api`
 
-### Error de Conexión
-```bash
-# Verificar contenedores
-docker ps
+### Error de Base de Datos
+- Verificar que SQL Server esté ejecutándose
+- Revisar conexión: `docker-compose logs db`
+- Reconstruir contenedores si es necesario
 
-# Ver logs
-docker-compose logs petcare-api
+### Error de Frontend
+- Limpiar cache: `npm run build`
+- Reinstalar dependencias: `rm -rf node_modules && npm install`
+- Verificar proxy en `vite.config.ts`
 
-# Reconstruir
-docker-compose down
-docker-compose up --build -d
-```
+## 📈 Próximas Funcionalidades
 
-### Error de PowerShell
-```bash
-# Usar Command Prompt o cambiar política
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
+- [ ] **Sistema de Calificaciones** - Clientes califican cuidadores
+- [ ] **Solicitudes de Servicio** - Reservas y contrataciones
+- [ ] **Chat en Tiempo Real** - Comunicación cliente-cuidador
+- [ ] **Pagos Online** - Integración con pasarelas de pago
+- [ ] **Notificaciones Push** - Alertas y recordatorios
+- [ ] **Panel de Administración** - Gestión de usuarios y servicios
 
-## 📊 Monitoreo
-
-### Verificar Servicios
-```bash
-# Estado de contenedores
-docker ps
-
-# Logs en tiempo real
-docker-compose logs -f
-
-# Uso de recursos
-docker stats
-```
-
-### Verificar Frontend
-- Abrir DevTools (F12)
-- Revisar Console para errores
-- Verificar Network para requests
-
-## 🚀 Despliegue
-
-### Desarrollo
-```bash
-# Backend con Docker
-docker-compose up -d
-
-# Frontend manual
-cd PetCareFrond
-npm run dev
-```
-
-### Producción
-```bash
-# Build y despliegue completo
-docker-compose -f docker-compose.full.yml up --build -d
-```
-
-## 📚 Documentación
-
-- 📖 [FRONTEND_README.md](FRONTEND_README.md) - Guía completa del frontend
-- 📖 [README_DEPLOY.md](README_DEPLOY.md) - Guía de despliegue
-- 📖 [PetCareFrond/README.md](PetCareFrond/README.md) - Documentación del frontend
-- 📖 [PetCareFrond/INSTALACION.md](PetCareFrond/INSTALACION.md) - Guía de instalación
-
-## 🤝 Contribuir
+## 🤝 Contribución
 
 1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## 📞 Soporte
-
-
-- 🐛 **Issues**: [GitHub Issues](https://github.com/WooshC/PetCareServicios/issues)
-- 📧 **Email**: soporte@petcare.com
+5. Abrir un Pull Request
 
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
 
+## 📞 Contacto
+
+- **GitHub**: [@WooshC](https://github.com/WooshC)
+- **Email**: soporte@petcare.com
+- **Proyecto**: [PetCareServicios](https://github.com/WooshC/PetCareServicios)
 
 ---
 
 <div align="center">
-
-  <p>🚀 <strong>¡PetCare Servicios Funcionando!</strong></p>
-  <p>🐕 Backend .NET + Frontend React</p>
-  <p>✨ Docker + SQL Server + JWT + CORS</p>
-  <p>✅ Login y Register Operativos</p>
-  <p>🔗 API Documentada con Swagger</p>
+  <p>🐕 <strong>¡PetCare - El mejor cuidado para tu mascota!</strong></p>
+  <p>✨ Sistema completo de autenticación y gestión de cuidadores</p>
+  <p>✅ Backend .NET + Frontend React + Base de datos SQL Server</p>
+  <p>🔗 Dockerizado y listo para producción</p>
 </div> 
 

@@ -4,8 +4,9 @@ import { LoginRequest, RegisterRequest } from './types/auth';
 import { CuidadorRequest, RegisterRequestWithRole, LoginRequestWithRole } from './types/cuidador';
 import Layout from './components/Layout';
 import CuidadorForm from './components/CuidadorForm';
+import CuidadorDashboard from './components/cuidador/CuidadorDashboard';
 
-type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard';
+type ViewType = 'login' | 'register' | 'cuidador-form' | 'dashboard' | 'cuidador-dashboard';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('login');
@@ -64,7 +65,7 @@ function App() {
         if (loginForm.role === 'Cuidador') {
           try {
             await cuidadorService.getMiPerfil();
-            setCurrentView('dashboard');
+            setCurrentView('cuidador-dashboard');
           } catch (error) {
             setCurrentView('cuidador-form');
           }
@@ -121,7 +122,7 @@ function App() {
     try {
       await cuidadorService.createCuidador(data);
       setMessage({ text: '¡Perfil de cuidador creado exitosamente!', type: 'success' });
-      setCurrentView('dashboard');
+      setCurrentView('cuidador-dashboard');
     } catch (error: any) {
       setMessage({ 
         text: error.response?.data?.message || 'Error al crear perfil de cuidador', 
@@ -130,6 +131,15 @@ function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = () => {
+    authService.removeToken();
+    setCurrentView('login');
+    setMessage(null);
+    setSelectedRole('Cliente');
+    setLoginForm({ email: '', password: '', role: 'Cliente' });
+    setRegisterForm({ email: '', password: '', name: '', role: 'Cliente' });
   };
 
   const handleInputChange = (form: 'login' | 'register', field: string, value: string) => {
@@ -333,11 +343,7 @@ function App() {
       <div className="mt-4">
         <button 
           className="btn btn-outline-danger"
-          onClick={() => {
-            authService.removeToken();
-            setCurrentView('login');
-            setMessage(null);
-          }}
+          onClick={handleLogout}
         >
           <i className="bi bi-box-arrow-right"></i> Cerrar Sesión
         </button>
@@ -355,10 +361,17 @@ function App() {
         return renderCuidadorForm();
       case 'dashboard':
         return renderDashboard();
+      case 'cuidador-dashboard':
+        return <CuidadorDashboard onLogout={handleLogout} />;
       default:
         return renderLoginForm();
     }
   };
+
+  // Si estamos en el dashboard de cuidador, no usar el layout de login
+  if (currentView === 'cuidador-dashboard') {
+    return <CuidadorDashboard onLogout={handleLogout} />;
+  }
 
   return (
     <Layout>

@@ -322,6 +322,99 @@ textarea.form-control {
   font-size: 1.1rem;
 }
 
+/* Cuidador Dashboard Styles */
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star-rating .bi {
+  font-size: 1.2rem;
+}
+
+.star-rating .bi-star-fill {
+  color: #ffc107;
+}
+
+.star-rating .bi-star {
+  color: #dee2e6;
+}
+
+/* Profile image styles */
+.rounded-circle {
+  border: 4px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Card header gradients */
+.card-header.bg-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.card-header.bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+}
+
+.card-header.bg-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%) !important;
+}
+
+.card-header.bg-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%) !important;
+}
+
+.card-header.bg-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+}
+
+/* Badge styles */
+.badge {
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+}
+
+.badge.bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+}
+
+.badge.bg-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%) !important;
+  color: #212529 !important;
+}
+
+/* Service icons */
+.list-unstyled li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.list-unstyled li:last-child {
+  border-bottom: none;
+}
+
+.list-unstyled .bi {
+  font-size: 1.1rem;
+  width: 20px;
+}
+
+/* Statistics cards */
+.card-body .row .col-md-3 {
+  padding: 1rem;
+}
+
+.card-body .row .col-md-3 h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.card-body .row .col-md-3 small {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .login-container {
@@ -351,6 +444,23 @@ textarea.form-control {
   .btn-group .btn {
     border-radius: 8px !important;
     margin-bottom: 0.5rem;
+  }
+
+  /* Dashboard responsive */
+  .container.mt-4 {
+    padding: 1rem;
+  }
+
+  .card-body .row .col-md-3 {
+    padding: 0.5rem;
+  }
+
+  .card-body .row .col-md-3 h3 {
+    font-size: 1.5rem;
+  }
+
+  .star-rating .bi {
+    font-size: 1rem;
   }
 }
 
