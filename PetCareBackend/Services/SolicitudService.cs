@@ -14,12 +14,14 @@ namespace PetCareServicios.Services
         private readonly SolicitudesDbContext _solicitudesContext;
         private readonly AppDbContext _authContext;
         private readonly CuidadoresDbContext _cuidadoresContext;
+        private readonly ClientesDbContext _clientesContext;
 
-        public SolicitudService(SolicitudesDbContext solicitudesContext, AppDbContext authContext, CuidadoresDbContext cuidadoresContext)
+        public SolicitudService(SolicitudesDbContext solicitudesContext, AppDbContext authContext, CuidadoresDbContext cuidadoresContext, ClientesDbContext clientesContext)
         {
             _solicitudesContext = solicitudesContext;
             _authContext = authContext;
             _cuidadoresContext = cuidadoresContext;
+            _clientesContext = clientesContext;
         }
 
         // ===== OPERACIONES GENERALES =====
@@ -409,14 +411,23 @@ namespace PetCareServicios.Services
                 FechaFinalizacion = solicitud.FechaFinalizacion
             };
 
-            // Obtener información del cliente
+            // Obtener información completa del cliente
             if (solicitud.ClienteID.HasValue)
             {
-                var cliente = await _authContext.Users.FindAsync(solicitud.ClienteID.Value);
+                // Buscar el perfil de cliente
+                var cliente = await _clientesContext.Clientes
+                    .FirstOrDefaultAsync(c => c.ClienteID == solicitud.ClienteID.Value);
+                
                 if (cliente != null)
                 {
-                    response.NombreCliente = cliente.Name;
-                    response.EmailCliente = cliente.Email ?? string.Empty;
+                    // Buscar la información del usuario asociado
+                    var usuario = await _authContext.Users.FindAsync(cliente.UsuarioID);
+                    if (usuario != null)
+                    {
+                        response.NombreCliente = usuario.Name;
+                        response.EmailCliente = usuario.Email ?? string.Empty;
+                        response.TelefonoCliente = cliente.TelefonoEmergencia;
+                    }
                 }
             }
 

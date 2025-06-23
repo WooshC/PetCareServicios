@@ -13,6 +13,7 @@ interface Solicitud {
   fechaCreacion: string;
   nombreCliente: string;
   emailCliente: string;
+  telefonoCliente: string;
 }
 
 interface SolicitudesSectionProps {
@@ -180,47 +181,55 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
                               </div>
                             </div>
                             <div className="card-body">
-                              <h6 className="card-title">
-                                <i className="bi bi-person"></i> {solicitud.nombreCliente}
-                              </h6>
-                              <p className="card-text small text-muted">
-                                <i className="bi bi-envelope"></i> {solicitud.emailCliente}
-                              </p>
-                              <p className="card-text">{solicitud.descripcion}</p>
-                              
-                              <div className="row text-center mb-3">
-                                <div className="col-6">
-                                  <small className="text-muted">
-                                    <i className="bi bi-calendar"></i><br />
-                                    {formatDate(solicitud.fechaHoraInicio)}
-                                  </small>
+                              <div className="row">
+                                <div className="col-md-8">
+                                  <h6 className="card-title fw-bold">
+                                    <i className="bi bi-person-circle me-2"></i>
+                                    {solicitud.nombreCliente}
+                                  </h6>
+                                  <p className="card-text text-muted mb-2">
+                                    <i className="bi bi-envelope me-1"></i>
+                                    {solicitud.emailCliente}
+                                  </p>
+                                  <p className="card-text text-muted mb-2">
+                                    <i className="bi bi-telephone me-1"></i>
+                                    {solicitud.telefonoCliente}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Servicio:</strong> {solicitud.tipoServicio}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Descripción:</strong> {solicitud.descripcion}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Ubicación:</strong> {solicitud.ubicacion}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Fecha y Hora:</strong> {formatDate(solicitud.fechaHoraInicio)}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Duración:</strong> {solicitud.duracionHoras} horas
+                                  </p>
                                 </div>
-                                <div className="col-6">
-                                  <small className="text-muted">
-                                    <i className="bi bi-clock"></i><br />
-                                    {solicitud.duracionHoras} horas
-                                  </small>
+                                <div className="col-md-4 text-end">
+                                  {getEstadoBadge(solicitud.estado)}
+                                  <div className="mt-3">
+                                    <button
+                                      className="btn btn-success btn-sm me-2"
+                                      onClick={() => handleAceptarSolicitud(solicitud.solicitudID)}
+                                      disabled={loading}
+                                    >
+                                      <i className="bi bi-check-circle"></i> Aceptar
+                                    </button>
+                                    <button
+                                      className="btn btn-danger btn-sm"
+                                      onClick={() => handleRechazarSolicitud(solicitud.solicitudID)}
+                                      disabled={loading}
+                                    >
+                                      <i className="bi bi-x-circle"></i> Rechazar
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
-                              
-                              <p className="card-text small">
-                                <i className="bi bi-geo-alt"></i> {solicitud.ubicacion}
-                              </p>
-                            </div>
-                            <div className="card-footer bg-transparent">
-                              <div className="d-grid gap-2">
-                                <button
-                                  className="btn btn-success btn-sm"
-                                  onClick={() => handleAceptarSolicitud(solicitud.solicitudID)}
-                                >
-                                  <i className="bi bi-check-circle"></i> Aceptar
-                                </button>
-                                <button
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() => handleRechazarSolicitud(solicitud.solicitudID)}
-                                >
-                                  <i className="bi bi-x-circle"></i> Rechazar
-                                </button>
                               </div>
                             </div>
                           </div>

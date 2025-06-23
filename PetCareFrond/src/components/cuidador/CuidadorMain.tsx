@@ -58,6 +58,24 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
     }
   }, [currentSection]);
 
+  // Polling para actualizar contadores automáticamente cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Actualizar contador de solicitudes pendientes
+      loadSolicitudesCount();
+      // Actualizar contador de solicitudes activas
+      loadSolicitudesActivasCount();
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Cargar contadores iniciales al montar el componente
+  useEffect(() => {
+    loadSolicitudesCount();
+    loadSolicitudesActivasCount();
+  }, []);
+
   // ===== FUNCIONES PRINCIPALES =====
 
   const loadCuidadorProfile = async () => {

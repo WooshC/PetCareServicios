@@ -48,6 +48,7 @@ namespace PetCareServicios.Models.Solicitudes
         // Información adicional del cliente y cuidador
         public string NombreCliente { get; set; } = string.Empty;
         public string EmailCliente { get; set; } = string.Empty;
+        public string TelefonoCliente { get; set; } = string.Empty;
         public string NombreCuidador { get; set; } = string.Empty;
         public string EmailCuidador { get; set; } = string.Empty;
     }

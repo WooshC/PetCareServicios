@@ -12,6 +12,7 @@ interface Solicitud {
   fechaCreacion: string;
   nombreCliente: string;
   emailCliente: string;
+  telefonoCliente: string;
 }
 
 interface SolicitudesActivasSectionProps {
@@ -153,40 +154,59 @@ const SolicitudesActivasSection: React.FC<SolicitudesActivasSectionProps> = ({ o
                               </div>
                             </div>
                             <div className="card-body">
-                              <p className="card-text">
-                                <strong>Cliente:</strong> {solicitud.nombreCliente}
-                              </p>
-                              <p className="card-text">
-                                <strong>Descripción:</strong> {solicitud.descripcion}
-                              </p>
-                              <p className="card-text">
-                                <strong>Ubicación:</strong> {solicitud.ubicacion}
-                              </p>
-                              <p className="card-text">
-                                <strong>Fecha:</strong> {formatDate(solicitud.fechaHoraInicio)}
-                              </p>
-                              <p className="card-text">
-                                <strong>Duración:</strong> {solicitud.duracionHoras} horas
-                              </p>
-                            </div>
-                            <div className="card-footer">
-                              <div className="d-grid gap-2">
-                                {solicitud.estado === 'Aceptada' && (
-                                  <button
-                                    className="btn btn-primary btn-sm"
-                                    onClick={() => handleIniciarServicio(solicitud.solicitudID)}
-                                  >
-                                    <i className="bi bi-play-circle"></i> Iniciar Servicio
-                                  </button>
-                                )}
-                                {solicitud.estado === 'En Progreso' && (
-                                  <button
-                                    className="btn btn-success btn-sm"
-                                    onClick={() => handleFinalizarServicio(solicitud.solicitudID)}
-                                  >
-                                    <i className="bi bi-check-circle"></i> Finalizar Servicio
-                                  </button>
-                                )}
+                              <div className="row">
+                                <div className="col-md-8">
+                                  <h6 className="card-title fw-bold">
+                                    <i className="bi bi-person-circle me-2"></i>
+                                    {solicitud.nombreCliente}
+                                  </h6>
+                                  <p className="card-text text-muted mb-2">
+                                    <i className="bi bi-envelope me-1"></i>
+                                    {solicitud.emailCliente}
+                                  </p>
+                                  <p className="card-text text-muted mb-2">
+                                    <i className="bi bi-telephone me-1"></i>
+                                    {solicitud.telefonoCliente}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Servicio:</strong> {solicitud.tipoServicio}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Descripción:</strong> {solicitud.descripcion}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Ubicación:</strong> {solicitud.ubicacion}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Fecha y Hora:</strong> {formatDate(solicitud.fechaHoraInicio)}
+                                  </p>
+                                  <p className="card-text">
+                                    <strong>Duración:</strong> {solicitud.duracionHoras} horas
+                                  </p>
+                                </div>
+                                <div className="col-md-4 text-end">
+                                  {getEstadoBadge(solicitud.estado)}
+                                  <div className="mt-3">
+                                    {solicitud.estado === 'Aceptada' && (
+                                      <button
+                                        className="btn btn-primary btn-sm me-2"
+                                        onClick={() => handleIniciarServicio(solicitud.solicitudID)}
+                                        disabled={loading}
+                                      >
+                                        <i className="bi bi-play-circle"></i> Iniciar Servicio
+                                      </button>
+                                    )}
+                                    {solicitud.estado === 'En Progreso' && (
+                                      <button
+                                        className="btn btn-success btn-sm"
+                                        onClick={() => handleFinalizarServicio(solicitud.solicitudID)}
+                                        disabled={loading}
+                                      >
+                                        <i className="bi bi-check-circle"></i> Finalizar Servicio
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>

@@ -13,6 +13,7 @@ interface Solicitud {
   fechaFinalizacion?: string;
   nombreCliente: string;
   emailCliente: string;
+  telefonoCliente: string;
 }
 
 const HistorialSection: React.FC = () => {
@@ -176,44 +177,46 @@ const HistorialSection: React.FC = () => {
                       <div key={solicitud.solicitudID} className="col-12 mb-3">
                         <div className="card border-success">
                           <div className="card-body">
-                            <div className="row align-items-center">
-                              <div className="col-md-2 text-center">
-                                <i className={`bi ${getTipoServicioIcon(solicitud.tipoServicio)} display-4 text-success`}></i>
-                                <div className="mt-2">
-                                  <span className="badge bg-success">{solicitud.tipoServicio}</span>
-                                </div>
-                              </div>
-                              <div className="col-md-7">
-                                <h6 className="card-title mb-2">
-                                  <i className="bi bi-person me-2"></i>
+                            <div className="row">
+                              <div className="col-md-8">
+                                <h6 className="card-title fw-bold">
+                                  <i className="bi bi-person-circle me-2"></i>
                                   {solicitud.nombreCliente}
                                 </h6>
                                 <p className="card-text text-muted mb-2">
-                                  <i className="bi bi-chat me-2"></i>
-                                  {solicitud.descripcion}
+                                  <i className="bi bi-envelope me-1"></i>
+                                  {solicitud.emailCliente}
                                 </p>
-                                <div className="row text-muted small">
-                                  <div className="col-md-6">
-                                    <i className="bi bi-geo-alt me-1"></i>
-                                    {solicitud.ubicacion}
-                                  </div>
-                                  <div className="col-md-6">
-                                    <i className="bi bi-clock me-1"></i>
-                                    {solicitud.duracionHoras} horas
-                                  </div>
-                                </div>
+                                <p className="card-text text-muted mb-2">
+                                  <i className="bi bi-telephone me-1"></i>
+                                  {solicitud.telefonoCliente}
+                                </p>
+                                <p className="card-text">
+                                  <strong>Servicio:</strong> {solicitud.tipoServicio}
+                                </p>
+                                <p className="card-text">
+                                  <strong>Descripción:</strong> {solicitud.descripcion}
+                                </p>
+                                <p className="card-text">
+                                  <strong>Ubicación:</strong> {solicitud.ubicacion}
+                                </p>
+                                <p className="card-text">
+                                  <strong>Fecha de Inicio:</strong> {formatDate(solicitud.fechaHoraInicio)}
+                                </p>
+                                {solicitud.fechaFinalizacion && (
+                                  <p className="card-text">
+                                    <strong>Fecha de Finalización:</strong> {formatDate(solicitud.fechaFinalizacion)}
+                                  </p>
+                                )}
+                                <p className="card-text">
+                                  <strong>Duración:</strong> {solicitud.duracionHoras} horas
+                                </p>
                               </div>
-                              <div className="col-md-3 text-end">
-                                <div className="text-success">
+                              <div className="col-md-4 text-end">
+                                <span className="badge bg-success fs-6">
                                   <i className="bi bi-check-circle me-1"></i>
-                                  Finalizado
-                                </div>
-                                <div className="text-muted small mt-1">
-                                  <div>Inicio: {formatDate(solicitud.fechaHoraInicio)}</div>
-                                  {solicitud.fechaFinalizacion && (
-                                    <div>Fin: {formatDate(solicitud.fechaFinalizacion)}</div>
-                                  )}
-                                </div>
+                                  Finalizada
+                                </span>
                               </div>
                             </div>
                           </div>
