@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { authService, cuidadorService, clienteService } from './services/api';
-import { LoginRequest, RegisterRequest, AuthResponse } from './types/auth';
-import { CuidadorRequest, CuidadorResponse, RegisterRequestWithRole, LoginRequestWithRole } from './types/cuidador';
+import { CuidadorRequest, RegisterRequestWithRole, LoginRequestWithRole } from './types/cuidador';
 import Layout from './components/Layout';
 import CuidadorForm from './components/CuidadorForm';
 import CuidadorMain from './components/cuidador/CuidadorMain';
@@ -687,7 +686,7 @@ function App() {
           <div className="col-md-6 d-none d-md-block">
             <div className="position-relative h-100">
               <img 
-                src="https://imgs.search.brave.com/iMyHf6a6nt9hz_HwUzVHbgg17MwQqf282N9-Hn0bRLw/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTMw/NjkwNzU4OC9lcy9m/b3RvL2hhcHB5LWdp/cmwtanVlZ2EtY29u/LXVuLXBlcnJvLWRl/LWZvbmRvLWdyaXMt/cGVycm8tbGFtZS1j/aGVlY2stZGUtbXVq/ZXItZmVsaXotc2Ul/QzMlQjFvcmEtZGUt/YnVlbm8uanBnP3M9/NjEyJnc9MCZrPTIwJmM9/Skh5S2dQLUloTm9O/a05CZDNEUkluVkZh/TWttYllhRjlkQ2xi/cFB0MWgtST0"
+                src="https://imgs.search.brave.com/b_o8-I_BsPh4aB7qALl6zh-Sw7jI8OyhAjjQKXZiaWA/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTM0/MTc1OTc0OS9lcy9m/b3RvL2ZlbGl6LXkt/ZW4lQzMlQTlyZ2lj/by1nb2xkZW4tcmV0/cmlldmVyLWp1Z2Fu/ZG8tYS1sYS1wZXJz/ZWN1Y2klQzMlQjNu/LWNvbi1lbC1kdWUl/QzMlQjFvLmpwZz9z/PTYxMng2MTImdz0w/Jms9MjAmYz1XWWZG/TlFZcXB1aFdlLXVr/bXA3WGJuRUpGcnhF/VTl4aXZHZDFxbkpN/UUhjPQ"
                 alt="Mascota feliz con su dueño"
                 className="img-fluid rounded shadow-lg h-100 w-100 object-fit-cover"
               />

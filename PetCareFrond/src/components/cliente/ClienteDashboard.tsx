@@ -45,6 +45,16 @@ const ClienteDashboard: React.FC<ClienteDashboardProps> = ({ onLogout }) => {
     loadCuidadoresDisponibles();
   }, []);
 
+  // Polling para actualizar automáticamente cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadSolicitudes();
+      loadCuidadoresDisponibles();
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
+  }, []);
+
   const loadSolicitudes = async () => {
     try {
       const data = await solicitudService.getMisSolicitudes();

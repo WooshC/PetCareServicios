@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { solicitudService } from '../../services/api';
-import { authService } from '../../services/api';
+import { solicitudService, cuidadorService } from '../../services/api';
+import { CuidadorResponse } from '../../types/cuidador';
 
 interface Solicitud {
   solicitudID: number;
@@ -22,8 +22,10 @@ interface SolicitudesSectionProps {
 
 const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCountChange }) => {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+  const [cuidador, setCuidador] = useState<CuidadorResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   const loadSolicitudes = async () => {
     try {
@@ -31,46 +33,54 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
       const data = await solicitudService.getMisSolicitudesPendientes();
       setSolicitudes(data);
       onSolicitudesCountChange(data.length);
-      setError(null);
-    } catch (err: any) {
-      setError('Error al cargar las solicitudes pendientes');
-      console.error('Error loading solicitudes:', err);
+    } catch (error) {
+      console.error('Error loading solicitudes:', error);
+      setError('Error al cargar las solicitudes');
     } finally {
       setLoading(false);
     }
   };
 
+  const loadCuidadorProfile = async () => {
+    try {
+      const profile = await cuidadorService.getMiPerfil();
+      setCuidador(profile);
+    } catch (error) {
+      console.error('Error loading cuidador profile:', error);
+    }
+  };
+
   useEffect(() => {
     loadSolicitudes();
+    loadCuidadorProfile();
   }, []);
 
   const handleAceptarSolicitud = async (solicitudId: number) => {
     try {
       await solicitudService.aceptarSolicitud(solicitudId);
-      // Recargar las solicitudes después de aceptar
-      await loadSolicitudes();
-    } catch (err: any) {
+      await loadSolicitudes(); // Recargar la lista
+    } catch (error) {
+      console.error('Error accepting solicitud:', error);
       setError('Error al aceptar la solicitud');
-      console.error('Error accepting solicitud:', err);
     }
   };
 
   const handleRechazarSolicitud = async (solicitudId: number) => {
     try {
       await solicitudService.rechazarSolicitud(solicitudId);
-      // Como ahora se elimina de la base de datos, removemos de la lista local
-      setSolicitudes(prev => prev.filter(s => s.solicitudID !== solicitudId));
-      onSolicitudesCountChange(solicitudes.length - 1);
+      await loadSolicitudes(); // Recargar la lista
     } catch (error) {
       console.error('Error rejecting solicitud:', error);
+      setError('Error al rechazar la solicitud');
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('es-ES', {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
       year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+      month: 'short',
+      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -79,7 +89,7 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
       case 'Pendiente':
-        return <span className="badge bg-warning">Pendiente</span>;
+        return <span className="badge bg-warning text-dark">Pendiente</span>;
       case 'Aceptada':
         return <span className="badge bg-success">Aceptada</span>;
       case 'En Progreso':
@@ -93,154 +103,274 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
     }
   };
 
+  const getCardHeaderClass = (estado: string) => {
+    switch (estado) {
+      case 'Pendiente':
+        return 'bg-warning text-dark';
+      case 'Aceptada':
+        return 'bg-success text-white';
+      case 'En Progreso':
+        return 'bg-info text-white';
+      case 'Fuera de Tiempo':
+        return 'bg-secondary text-white';
+      default:
+        return 'bg-secondary text-white';
+    }
+  };
+
+  const getCardBorderClass = (estado: string) => {
+    switch (estado) {
+      case 'Pendiente':
+        return 'border-warning border-3';
+      case 'Aceptada':
+        return 'border-success border-3';
+      case 'En Progreso':
+        return 'border-info border-3';
+      case 'Fuera de Tiempo':
+        return 'border-secondary border-3';
+      default:
+        return 'border-secondary border-2';
+    }
+  };
+
+  const toggleExpanded = (solicitudId: number) => {
+    setExpandedCard(expandedCard === solicitudId ? null : solicitudId);
+  };
+
+  const renderStarRating = (rating: number) => {
+    return (
+      <div className="star-rating">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <i
+            key={star}
+            className={`bi ${star <= rating ? 'bi-star-fill text-warning' : 'bi-star text-muted'}`}
+          ></i>
+        ))}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
-      <div className="text-center py-5">
+      <div className="d-flex justify-content-center">
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Cargando...</span>
         </div>
-        <p className="mt-3">Cargando solicitudes pendientes...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-danger" role="alert">
+        <i className="bi bi-exclamation-triangle-fill me-2"></i>
+        {error}
       </div>
     );
   }
 
   return (
     <div className="solicitudes-section">
-      <div className="container mt-4">
-        <div className="row">
-          {/* Columna izquierda - Información del perfil */}
-          <div className="col-md-3">
-            <div className="card shadow-sm mb-4">
-              <div className="card-body text-center">
-                <img 
-                  src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
-                  className="rounded-circle mb-3" 
-                  width="120" 
-                  height="120"
-                  alt="Foto perfil"
-                  style={{ objectFit: 'cover' }}
-                />
-                <h5 className="fw-bold">Mi Perfil</h5>
-                <p className="text-muted small">Cuidador Profesional</p>
-                
-                <div className="d-grid gap-2">
-                  <button className="btn btn-outline-primary btn-sm">
-                    <i className="bi bi-pencil-square me-1"></i>
-                    Editar perfil
-                  </button>
+      <div className="row">
+        {/* Columna izquierda - Perfil del cuidador */}
+        <div className="col-md-3">
+          <div className="card border-0 shadow-sm mb-4">
+            <div className="card-body text-center">
+              <div className="profile-img mb-3">
+                <i className="bi bi-person-circle display-1 text-primary"></i>
+              </div>
+              <h5 className="card-title">{cuidador?.nombreUsuario || 'Cuidador'}</h5>
+              <p className="text-muted small">{cuidador?.emailUsuario}</p>
+              
+              {cuidador?.calificacionPromedio && cuidador.calificacionPromedio > 0 && (
+                <div className="mb-3">
+                  {renderStarRating(cuidador.calificacionPromedio)}
+                  <small className="text-muted d-block mt-1">
+                    {cuidador.calificacionPromedio.toFixed(1)} / 5.0
+                  </small>
                 </div>
+              )}
+
+              {cuidador?.tarifaPorHora && (
+                <div className="mb-3">
+                  <strong className="text-success">
+                    ${cuidador.tarifaPorHora}/hora
+                  </strong>
+                </div>
+              )}
+
+              <div className="verification-badge">
+                {cuidador?.documentoVerificado ? (
+                  <span className="badge bg-success">
+                    <i className="bi bi-check-circle me-1"></i>
+                    Verificado
+                  </span>
+                ) : (
+                  <span className="badge bg-warning text-dark">
+                    <i className="bi bi-clock me-1"></i>
+                    Pendiente
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Columna central - Solicitudes */}
-          <div className="col-md-9">
-            {error && (
-              <div className="alert alert-danger alert-dismissible fade show" role="alert">
-                <i className="bi bi-exclamation-triangle"></i> {error}
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setError(null)}
-                ></button>
-              </div>
-            )}
-
-            {/* Solicitudes Pendientes */}
-            <div className="col-12 mb-4">
-              <div className="card shadow-sm">
-                <div className="card-header bg-warning text-dark">
-                  <h5 className="mb-0">
-                    <i className="bi bi-clock-fill me-2"></i>
-                    Solicitudes Pendientes
-                    {solicitudes.length > 0 && (
-                      <span className="badge bg-danger ms-2">{solicitudes.length}</span>
-                    )}
-                  </h5>
+          {/* Estadísticas */}
+          <div className="row g-3">
+            <div className="col-6">
+              <div className="card stats-card border-0 shadow-sm text-center">
+                <div className="card-body p-3">
+                  <h3 className="text-warning mb-0">{solicitudes.length}</h3>
+                  <small className="text-muted">Pendientes</small>
                 </div>
-                <div className="card-body">
-                  {solicitudes.length === 0 ? (
-                    <div className="text-center py-4">
-                      <i className="bi bi-inbox text-muted" style={{ fontSize: '3rem' }}></i>
-                      <p className="text-muted mt-3">No hay solicitudes pendientes</p>
-                      <small className="text-muted">
-                        Las nuevas solicitudes aparecerán aquí automáticamente
-                      </small>
+              </div>
+            </div>
+            <div className="col-6">
+              <div className="card stats-card border-0 shadow-sm text-center">
+                <div className="card-body p-3">
+                  <h3 className="text-success mb-0">0</h3>
+                  <small className="text-muted">Activas</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Columna derecha - Lista de solicitudes */}
+        <div className="col-md-9">
+          <h3 className="mb-4">
+            <i className="bi bi-clock-history text-warning"></i>
+            Solicitudes Pendientes ({solicitudes.length})
+          </h3>
+
+          {solicitudes.length === 0 ? (
+            <div className="text-center py-5">
+              <i className="bi bi-inbox display-1 text-muted"></i>
+              <h4 className="mt-3 text-muted">No hay solicitudes pendientes</h4>
+              <p className="text-muted">Cuando recibas nuevas solicitudes, aparecerán aquí.</p>
+            </div>
+          ) : (
+            <div className="row g-4">
+              {solicitudes.map((solicitud) => (
+                <div key={solicitud.solicitudID} className="col-12">
+                  <div className={`card h-100 shadow-sm ${getCardBorderClass(solicitud.estado)}`}>
+                    {/* Header de la tarjeta */}
+                    <div className={`card-header ${getCardHeaderClass(solicitud.estado)}`}>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 className="mb-0">
+                            <i className="bi bi-person-circle me-2"></i>
+                            {solicitud.nombreCliente}
+                          </h6>
+                          <small>
+                            <i className="bi bi-calendar-event me-1"></i>
+                            {formatDate(solicitud.fechaHoraInicio)}
+                          </small>
+                        </div>
+                        <div className="d-flex align-items-center gap-2">
+                          <span className="badge bg-light text-dark">
+                            {solicitud.tipoServicio}
+                          </span>
+                          {getEstadoBadge(solicitud.estado)}
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="row">
-                      {solicitudes.map((solicitud) => (
-                        <div key={solicitud.solicitudID} className="col-md-6 col-lg-4 mb-4">
-                          <div className="card h-100 border-warning">
-                            <div className="card-header bg-warning text-dark">
-                              <div className="d-flex justify-content-between align-items-center">
-                                <h6 className="mb-0">
-                                  <i className="bi bi-calendar-event"></i> {solicitud.tipoServicio}
-                                </h6>
-                                {getEstadoBadge(solicitud.estado)}
+
+                    <div className="card-body p-0">
+                      <div className="row g-0">
+                        {/* Información principal - lado izquierdo */}
+                        <div className="col-md-8">
+                          <div className="p-4">
+                            <div className="row mb-3">
+                              <div className="col-sm-6">
+                                <div className="d-flex align-items-center mb-2">
+                                  <i className="bi bi-geo-alt text-danger me-2"></i>
+                                  <span className="fw-medium">Ubicación:</span>
+                                </div>
+                                <p className="text-muted mb-0 small">{solicitud.ubicacion}</p>
+                              </div>
+                              <div className="col-sm-6">
+                                <div className="d-flex align-items-center mb-2">
+                                  <i className="bi bi-clock text-info me-2"></i>
+                                  <span className="fw-medium">Duración:</span>
+                                </div>
+                                <p className="text-muted mb-0 small">{solicitud.duracionHoras} horas</p>
                               </div>
                             </div>
-                            <div className="card-body">
-                              <div className="row">
-                                <div className="col-md-8">
-                                  <h6 className="card-title fw-bold">
-                                    <i className="bi bi-person-circle me-2"></i>
-                                    {solicitud.nombreCliente}
-                                  </h6>
-                                  <p className="card-text text-muted mb-2">
-                                    <i className="bi bi-envelope me-1"></i>
-                                    {solicitud.emailCliente}
-                                  </p>
-                                  <p className="card-text text-muted mb-2">
-                                    <i className="bi bi-telephone me-1"></i>
-                                    {solicitud.telefonoCliente}
-                                  </p>
-                                  <p className="card-text">
-                                    <strong>Servicio:</strong> {solicitud.tipoServicio}
-                                  </p>
-                                  <p className="card-text">
-                                    <strong>Descripción:</strong> {solicitud.descripcion}
-                                  </p>
-                                  <p className="card-text">
-                                    <strong>Ubicación:</strong> {solicitud.ubicacion}
-                                  </p>
-                                  <p className="card-text">
-                                    <strong>Fecha y Hora:</strong> {formatDate(solicitud.fechaHoraInicio)}
-                                  </p>
-                                  <p className="card-text">
-                                    <strong>Duración:</strong> {solicitud.duracionHoras} horas
-                                  </p>
-                                </div>
-                                <div className="col-md-4 text-end">
-                                  {getEstadoBadge(solicitud.estado)}
-                                  <div className="mt-3">
-                                    <button
-                                      className="btn btn-success btn-sm me-2"
-                                      onClick={() => handleAceptarSolicitud(solicitud.solicitudID)}
-                                      disabled={loading}
-                                    >
-                                      <i className="bi bi-check-circle"></i> Aceptar
-                                    </button>
-                                    <button
-                                      className="btn btn-danger btn-sm"
-                                      onClick={() => handleRechazarSolicitud(solicitud.solicitudID)}
-                                      disabled={loading}
-                                    >
-                                      <i className="bi bi-x-circle"></i> Rechazar
-                                    </button>
-                                  </div>
-                                </div>
+
+                            <div className="mb-3">
+                              <div className="d-flex align-items-center mb-2">
+                                <i className="bi bi-tag text-success me-2"></i>
+                                <span className="fw-medium">Servicio:</span>
                               </div>
+                              <p className="text-muted mb-0 small">{solicitud.tipoServicio}</p>
+                            </div>
+
+                            <div>
+                              <div className="d-flex align-items-center mb-2">
+                                <i className="bi bi-chat-text text-warning me-2"></i>
+                                <span className="fw-medium">Descripción:</span>
+                              </div>
+                              <p className="text-muted mb-0 small">{solicitud.descripcion}</p>
                             </div>
                           </div>
                         </div>
-                      ))}
+
+                        {/* Botones y información adicional - lado derecho */}
+                        <div className="col-md-4">
+                          <div className="p-4 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                              <button
+                                className="btn btn-outline-primary btn-sm w-100 mb-2"
+                                onClick={() => toggleExpanded(solicitud.solicitudID)}
+                              >
+                                <i className="bi bi-eye me-1"></i>
+                                {expandedCard === solicitud.solicitudID ? 'Ocultar' : 'Ver más'}
+                              </button>
+
+                              {expandedCard === solicitud.solicitudID && (
+                                <div className="border-top pt-3 mb-3">
+                                  <div className="mb-2">
+                                    <small className="text-muted d-block">
+                                      <i className="bi bi-envelope me-1"></i>
+                                      {solicitud.emailCliente}
+                                    </small>
+                                  </div>
+                                  <div className="mb-3">
+                                    <small className="text-muted d-block">
+                                      <i className="bi bi-telephone me-1"></i>
+                                      {solicitud.telefonoCliente}
+                                    </small>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="d-grid gap-2">
+                              <button
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleAceptarSolicitud(solicitud.solicitudID)}
+                              >
+                                <i className="bi bi-check-circle me-1"></i>
+                                Aceptar
+                              </button>
+                              <button
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => handleRechazarSolicitud(solicitud.solicitudID)}
+                              >
+                                <i className="bi bi-x-circle me-1"></i>
+                                Rechazar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
