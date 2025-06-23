@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { cuidadorService } from '../../services/api';
+import { cuidadorService, solicitudService } from '../../services/api';
 import { CuidadorResponse, CuidadorRequest } from '../../types/cuidador';
 import CuidadorHeader from './CuidadorHeader';
 import CuidadorDashboard from './CuidadorDashboard';
@@ -49,6 +49,15 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
     loadCuidadorProfile();
   }, []);
 
+  // Cargar contadores automáticamente cuando cambie la sección
+  useEffect(() => {
+    if (currentSection === 'solicitudes') {
+      loadSolicitudesCount();
+    } else if (currentSection === 'solicitudes-activas') {
+      loadSolicitudesActivasCount();
+    }
+  }, [currentSection]);
+
   // ===== FUNCIONES PRINCIPALES =====
 
   const loadCuidadorProfile = async () => {
@@ -60,6 +69,26 @@ const CuidadorMain: React.FC<CuidadorMainProps> = ({ onLogout }) => {
       console.error('Error loading cuidador profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Cargar contador de solicitudes pendientes
+  const loadSolicitudesCount = async () => {
+    try {
+      const data = await solicitudService.getMisSolicitudesPendientes();
+      setSolicitudesCount(data.length);
+    } catch (error) {
+      console.error('Error loading solicitudes count:', error);
+    }
+  };
+
+  // Cargar contador de solicitudes activas
+  const loadSolicitudesActivasCount = async () => {
+    try {
+      const data = await solicitudService.getMisSolicitudesActivas();
+      setSolicitudesActivasCount(data.length);
+    } catch (error) {
+      console.error('Error loading active solicitudes count:', error);
     }
   };
 

@@ -225,11 +225,30 @@ function App() {
    * 3. Redirige al login
    */
   const handleLogout = () => {
+    // Limpiar token y estado de autenticación
     authService.removeToken();
+    
+    // Resetear todos los estados
     setCurrentView('login');
-    setMessage(null);
-    setSelectedRole('Cliente');
     setClienteHasProfile(null);
+    
+    // Resetear formularios
+    setLoginForm({
+      email: '',
+      password: '',
+      role: 'Cliente'
+    });
+    setRegisterForm({
+      email: '',
+      password: '',
+      name: '',
+      role: 'Cliente'
+    });
+    setSelectedRole('Cliente');
+    
+    // Limpiar cualquier estado adicional
+    setLoading(false);
+    setMessage(null);
   };
 
   // ===== MANEJADORES DE CAMBIOS =====

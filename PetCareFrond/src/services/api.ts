@@ -611,6 +611,16 @@ export const solicitudService = {
       console.error('Error fetching active solicitudes:', error);
       return [];
     }
+  },
+
+  async getMiHistorial(): Promise<any[]> {
+    try {
+      const response = await api.get('/solicitud/mi-historial');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching history:', error);
+      return [];
+    }
   }
 };
 

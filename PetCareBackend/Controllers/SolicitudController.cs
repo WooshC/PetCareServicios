@@ -284,6 +284,26 @@ namespace PetCareServicios.Controllers
         }
 
         /// <summary>
+        /// Obtiene el historial de servicios finalizados del cuidador autenticado
+        /// FLUJO:
+        /// 1. Extrae el ID del usuario del token JWT
+        /// 2. Busca el perfil de cuidador asociado
+        /// 3. Retorna las solicitudes finalizadas del cuidador
+        /// </summary>
+        /// <returns>Lista de solicitudes finalizadas</returns>
+        [HttpGet("mi-historial")]
+        [Authorize(Roles = "Cuidador")]
+        public async Task<ActionResult<List<SolicitudResponse>>> GetMiHistorial()
+        {
+            var cuidadorId = await GetCurrentCuidadorId();
+            if (cuidadorId == null)
+                return Unauthorized("No tienes un perfil de cuidador");
+
+            var solicitudes = await _solicitudService.GetSolicitudesFinalizadasByCuidadorAsync(cuidadorId.Value);
+            return Ok(solicitudes);
+        }
+
+        /// <summary>
         /// Acepta una solicitud pendiente
         /// FLUJO:
         /// 1. Extrae el ID del usuario del token JWT
