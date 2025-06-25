@@ -92,6 +92,22 @@ PetCareServicios/
 2. **Perfil**: Completar información del perfil
 3. **Dashboard**: Ver información completa y estadísticas
 
+### Migraciones
+dotnet ef migrations add InitialAuth --context AppDbContext --output-dir Migrations/Auth
+dotnet ef migrations add InitialCuidadores --context CuidadoresDbContext --output-dir Migrations/Cuidadores
+dotnet ef migrations add InitialClientes --context ClientesDbContext --output-dir Migrations/Clientes
+dotnet ef migrations add InitialSolicitudes --context SolicitudesDbContext --output-dir Migrations/Solicitudes
+dotnet ef migrations add InitialCalificaciones --context CalificacionesDbContext --output-dir Migrations/Calificaciones
+
+
+
+docker-compose stop petcare-api
+docker-compose up --build -d petcare-api
+## Base de datos modificada
+docker-compose down -v
+docker-coppose up --buld -d
+
+
 ## 📚 Documentación Detallada
 
 Para información específica sobre instalación, configuración y uso, consulta:
