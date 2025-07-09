@@ -12,7 +12,7 @@ using PetCareServicios.Data;
 namespace PetCareServicios.Migrations.Auth
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250622201652_InitialAuth")]
+    [Migration("20250709152942_InitialAuth")]
     partial class InitialAuth
     {
         /// <inheritdoc />

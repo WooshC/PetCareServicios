@@ -6,16 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Migrations\Clientes\**" />
-    <Compile Remove="Migrations\Solicitudes\**" />
-    <Content Remove="Migrations\Clientes\**" />
-    <Content Remove="Migrations\Solicitudes\**" />
-    <EmbeddedResource Remove="Migrations\Clientes\**" />
-    <EmbeddedResource Remove="Migrations\Solicitudes\**" />
-    <None Remove="Migrations\Clientes\**" />
-    <None Remove="Migrations\Solicitudes\**" />
-  </ItemGroup>
+ <ItemGroup>
+  <Compile Update="Migrations\**\*.cs">
+    <DependentUpon>$(MSBuildProjectName).csproj</DependentUpon>
+  </Compile>
+</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />

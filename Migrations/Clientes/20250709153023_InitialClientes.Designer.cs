@@ -9,11 +9,11 @@ using PetCareServicios.Data;
 
 #nullable disable
 
-namespace PetCareServicios.Migrations.Cuidadores
+namespace PetCareServicios.Migrations.Clientes
 {
-    [DbContext(typeof(CuidadoresDbContext))]
-    [Migration("20250622193108_InitialCuidadores")]
-    partial class InitialCuidadores
+    [DbContext(typeof(ClientesDbContext))]
+    [Migration("20250709153023_InitialClientes")]
+    partial class InitialClientes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,21 +25,13 @@ namespace PetCareServicios.Migrations.Cuidadores
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("PetCareServicios.Models.Cuidadores.Cuidador", b =>
+            modelBuilder.Entity("PetCareServicios.Models.Clientes.Cliente", b =>
                 {
-                    b.Property<int>("CuidadorID")
+                    b.Property<int>("ClienteID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CuidadorID"));
-
-                    b.Property<string>("Biografia")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("CalificacionPromedio")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("DECIMAL(3,2)")
-                        .HasDefaultValue(0.0m);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ClienteID"));
 
                     b.Property<string>("DocumentoIdentidad")
                         .IsRequired()
@@ -53,11 +45,10 @@ namespace PetCareServicios.Migrations.Cuidadores
 
                     b.Property<string>("Estado")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Experiencia")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Activo");
 
                     b.Property<DateTime?>("FechaActualizacion")
                         .HasColumnType("datetime2");
@@ -70,13 +61,6 @@ namespace PetCareServicios.Migrations.Cuidadores
                     b.Property<DateTime?>("FechaVerificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("HorarioAtencion")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal?>("TarifaPorHora")
-                        .HasColumnType("DECIMAL(10,2)");
-
                     b.Property<string>("TelefonoEmergencia")
                         .IsRequired()
                         .HasMaxLength(15)
@@ -85,7 +69,7 @@ namespace PetCareServicios.Migrations.Cuidadores
                     b.Property<int>("UsuarioID")
                         .HasColumnType("int");
 
-                    b.HasKey("CuidadorID");
+                    b.HasKey("ClienteID");
 
                     b.HasIndex("DocumentoIdentidad")
                         .IsUnique();
@@ -93,7 +77,7 @@ namespace PetCareServicios.Migrations.Cuidadores
                     b.HasIndex("UsuarioID")
                         .IsUnique();
 
-                    b.ToTable("Cuidadores");
+                    b.ToTable("Clientes");
                 });
 #pragma warning restore 612, 618
         }

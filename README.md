@@ -11,7 +11,7 @@ git clone https://github.com/WooshC/PetCareServicios.git
 cd PetCareServicios
 
 # Ejecutar con Docker Compose
-docker-compose up -d
+docker-coppose up --buld -d
 
 # Verificar funcionamiento
 curl http://localhost:5000/api/auth/health

@@ -100,7 +100,7 @@ namespace PetCareServicios.Migrations.Solicitudes
                     b.HasIndex("CuidadorID", "Estado")
                         .HasDatabaseName("IX_Solicitudes_CuidadorID_Estado");
 
-                    b.ToTable("Solicitudes", t =>
+                    b.ToTable("Solicitudes", null, t =>
                         {
                             t.HasCheckConstraint("CHK_Duracion", "DuracionHoras > 0");
 

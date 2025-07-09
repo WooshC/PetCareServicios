@@ -12,7 +12,7 @@ using PetCareServicios.Data;
 namespace PetCareServicios.Migrations.Calificaciones
 {
     [DbContext(typeof(CalificacionesDbContext))]
-    [Migration("20250622193142_InitialCalificaciones")]
+    [Migration("20250709153044_InitialCalificaciones")]
     partial class InitialCalificaciones
     {
         /// <inheritdoc />
@@ -68,7 +68,7 @@ namespace PetCareServicios.Migrations.Calificaciones
                     b.HasIndex("CuidadorID", "FechaCalificacion")
                         .HasDatabaseName("IX_Calificaciones_CuidadorID_Fecha");
 
-                    b.ToTable("Calificaciones", t =>
+                    b.ToTable("Calificaciones", null, t =>
                         {
                             t.HasCheckConstraint("CHK_Puntuacion", "Puntuacion BETWEEN 1 AND 5");
                         });

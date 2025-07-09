@@ -65,7 +65,7 @@ namespace PetCareServicios.Migrations.Calificaciones
                     b.HasIndex("CuidadorID", "FechaCalificacion")
                         .HasDatabaseName("IX_Calificaciones_CuidadorID_Fecha");
 
-                    b.ToTable("Calificaciones", t =>
+                    b.ToTable("Calificaciones", null, t =>
                         {
                             t.HasCheckConstraint("CHK_Puntuacion", "Puntuacion BETWEEN 1 AND 5");
                         });

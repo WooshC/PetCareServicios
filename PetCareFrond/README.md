@@ -181,11 +181,6 @@ npm run preview
 3. Configura el servidor web para servir archivos estáticos
 4. Asegúrate de que la API esté accesible desde el frontend
 
-### Despliegue con Docker
-```bash
-# Usar docker-compose.full.yml para desplegar todo
-docker-compose -f docker-compose.full.yml up -d
-```
 
 ## 🔄 Desarrollo con Docker
 

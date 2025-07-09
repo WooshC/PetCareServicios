@@ -12,7 +12,7 @@ using PetCareServicios.Data;
 namespace PetCareServicios.Migrations.Solicitudes
 {
     [DbContext(typeof(SolicitudesDbContext))]
-    [Migration("20250622194438_InitialSolicitudes")]
+    [Migration("20250709153028_InitialSolicitudes")]
     partial class InitialSolicitudes
     {
         /// <inheritdoc />
@@ -103,7 +103,7 @@ namespace PetCareServicios.Migrations.Solicitudes
                     b.HasIndex("CuidadorID", "Estado")
                         .HasDatabaseName("IX_Solicitudes_CuidadorID_Estado");
 
-                    b.ToTable("Solicitudes", t =>
+                    b.ToTable("Solicitudes", null, t =>
                         {
                             t.HasCheckConstraint("CHK_Duracion", "DuracionHoras > 0");
 
