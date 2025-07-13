@@ -624,5 +624,69 @@ export const solicitudService = {
   }
 };
 
+/**
+ * Servicio de gestión de mensajes
+ * Maneja operaciones de chat entre clientes y cuidadores
+ */
+export const mensajeService = {
+  /**
+   * Obtiene todos los mensajes de una solicitud
+   * Requiere autenticación
+   * 
+   * @param solicitudId - ID de la solicitud
+   * @returns Promise con lista de mensajes
+   */
+  async getMensajesPorSolicitud(solicitudId: number): Promise<any[]> {
+    const response = await api.get<any[]>(`/mensaje/solicitud/${solicitudId}`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene mensajes no leídos de una solicitud
+   * Requiere autenticación
+   * 
+   * @param solicitudId - ID de la solicitud
+   * @returns Promise con lista de mensajes no leídos
+   */
+  async getMensajesNoLeidos(solicitudId: number): Promise<any[]> {
+    const response = await api.get<any[]>(`/mensaje/solicitud/${solicitudId}/no-leidos`);
+    return response.data;
+  },
+
+  /**
+   * Obtiene la cantidad de mensajes no leídos
+   * Requiere autenticación
+   * 
+   * @param solicitudId - ID de la solicitud
+   * @returns Promise con cantidad de mensajes no leídos
+   */
+  async getCantidadMensajesNoLeidos(solicitudId: number): Promise<number> {
+    const response = await api.get<number>(`/mensaje/solicitud/${solicitudId}/cantidad-no-leidos`);
+    return response.data;
+  },
+
+  /**
+   * Marca mensajes como leídos
+   * Requiere autenticación
+   * 
+   * @param solicitudId - ID de la solicitud
+   * @returns Promise con confirmación
+   */
+  async marcarMensajesComoLeidos(solicitudId: number): Promise<void> {
+    await api.post(`/mensaje/solicitud/${solicitudId}/marcar-leidos`);
+  },
+
+  /**
+   * Elimina un mensaje
+   * Requiere autenticación (solo el remitente puede eliminar)
+   * 
+   * @param mensajeId - ID del mensaje
+   * @returns Promise con confirmación
+   */
+  async eliminarMensaje(mensajeId: number): Promise<void> {
+    await api.delete(`/mensaje/${mensajeId}`);
+  }
+};
+
 // Exportar la instancia de axios para uso directo si es necesario
 export default api; 

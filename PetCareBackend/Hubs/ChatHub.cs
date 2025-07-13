@@ -2,29 +2,30 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using PetCareServicios.Data;
+using PetCareServicios.Services.Interfaces;
+using PetCareServicios.Models.Mensajes;
 
 namespace PetCareServicios.Hubs
 {
     /// <summary>
     /// Hub de SignalR para comunicación en tiempo real entre clientes y cuidadores
-    /// Los mensajes se almacenan en memoria y se borran al finalizar el servicio
+    /// Los mensajes se almacenan en base de datos para persistencia
     /// </summary>
     [Authorize]
     public class ChatHub : Hub
     {
         private readonly ILogger<ChatHub> _logger;
         private readonly AppDbContext _authContext;
+        private readonly IMensajeService _mensajeService;
 
         // Diccionario para mantener las conexiones activas
         private static readonly Dictionary<string, UserConnection> _userConnections = new();
-        
-        // Almacenamiento en memoria de mensajes por solicitud (se borra al finalizar)
-        private static readonly Dictionary<int, List<ChatMessage>> _chatMessages = new();
 
-        public ChatHub(ILogger<ChatHub> logger, AppDbContext authContext)
+        public ChatHub(ILogger<ChatHub> logger, AppDbContext authContext, IMensajeService mensajeService)
         {
             _logger = logger;
             _authContext = authContext;
+            _mensajeService = mensajeService;
         }
 
         /// <summary>
@@ -115,30 +116,34 @@ namespace PetCareServicios.Hubs
             var user = await _authContext.Users.FindAsync(userId.Value);
             if (user == null) return;
 
-            // Crear mensaje en memoria
-            var chatMessage = new ChatMessage
+            try
             {
-                MessageId = Guid.NewGuid().ToString(),
-                SolicitudId = solicitudId,
-                SenderId = userId.Value,
-                SenderName = user.Name,
-                Message = message,
-                Timestamp = DateTime.UtcNow,
-                IsRead = false
-            };
+                // Crear mensaje en base de datos
+                var mensaje = await _mensajeService.CrearMensajeAsync(solicitudId, userId.Value, message);
 
-            // Almacenar mensaje en memoria
-            if (!_chatMessages.ContainsKey(solicitudId))
-            {
-                _chatMessages[solicitudId] = new List<ChatMessage>();
+                // Crear objeto de respuesta para SignalR
+                var chatMessage = new ChatMessage
+                {
+                    MessageId = mensaje.MensajeID.ToString(),
+                    SolicitudId = solicitudId,
+                    SenderId = userId.Value,
+                    SenderName = user.Name,
+                    Message = message,
+                    Timestamp = mensaje.Timestamp,
+                    IsRead = false
+                };
+
+                // Enviar mensaje a todos los miembros del grupo
+                var groupName = $"solicitud_{solicitudId}";
+                await Clients.Group(groupName).SendAsync("ReceiveMessage", chatMessage);
+
+                _logger.LogInformation($"Mensaje enviado en solicitud {solicitudId} por {user.Name}");
             }
-            _chatMessages[solicitudId].Add(chatMessage);
-
-            // Enviar mensaje a todos los miembros del grupo
-            var groupName = $"solicitud_{solicitudId}";
-            await Clients.Group(groupName).SendAsync("ReceiveMessage", chatMessage);
-
-            _logger.LogInformation($"Mensaje enviado en solicitud {solicitudId} por {user.Name}");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al enviar mensaje en solicitud {solicitudId}");
+                await Clients.Caller.SendAsync("ErrorMessage", "Error al enviar el mensaje");
+            }
         }
 
         /// <summary>
@@ -149,54 +154,72 @@ namespace PetCareServicios.Hubs
             var userId = GetCurrentUserId();
             if (!userId.HasValue) return;
 
-            // Marcar mensajes no leídos como leídos en memoria
-            if (_chatMessages.ContainsKey(solicitudId))
+            try
             {
-                var unreadMessages = _chatMessages[solicitudId]
-                    .Where(m => m.SenderId != userId.Value && !m.IsRead)
-                    .ToList();
+                // Marcar mensajes como leídos en base de datos
+                await _mensajeService.MarcarMensajesComoLeidosAsync(solicitudId, userId.Value);
 
-                foreach (var message in unreadMessages)
-                {
-                    message.IsRead = true;
-                    message.ReadAt = DateTime.UtcNow;
-                }
+                // Notificar al remitente que sus mensajes fueron leídos
+                var groupName = $"solicitud_{solicitudId}";
+                await Clients.Group(groupName).SendAsync("MessagesRead", solicitudId, userId.Value);
             }
-
-            // Notificar al remitente que sus mensajes fueron leídos
-            var groupName = $"solicitud_{solicitudId}";
-            await Clients.Group(groupName).SendAsync("MessagesRead", solicitudId, userId.Value);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al marcar mensajes como leídos en solicitud {solicitudId}");
+            }
         }
 
         /// <summary>
-        /// Obtener mensajes de una solicitud desde memoria
+        /// Obtener mensajes de una solicitud desde base de datos
         /// </summary>
         public async Task GetChatHistory(int solicitudId)
         {
             var userId = GetCurrentUserId();
             if (!userId.HasValue) return;
 
-            var messages = _chatMessages.ContainsKey(solicitudId) 
-                ? _chatMessages[solicitudId].OrderBy(m => m.Timestamp).ToList()
-                : new List<ChatMessage>();
+            try
+            {
+                var mensajes = await _mensajeService.ObtenerMensajesPorSolicitudAsync(solicitudId);
+                
+                // Convertir a formato ChatMessage para compatibilidad
+                var chatMessages = mensajes.Select(m => new ChatMessage
+                {
+                    MessageId = m.MensajeID.ToString(),
+                    SolicitudId = m.SolicitudID,
+                    SenderId = m.RemitenteID,
+                    SenderName = "", // Se llenará desde el frontend
+                    Message = m.Contenido,
+                    Timestamp = m.Timestamp,
+                    IsRead = m.EsLeido,
+                    ReadAt = m.FechaLectura
+                }).ToList();
 
-            await Clients.Caller.SendAsync("ChatHistory", solicitudId, messages);
+                await Clients.Caller.SendAsync("ChatHistory", solicitudId, chatMessages);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener historial de chat para solicitud {solicitudId}");
+                await Clients.Caller.SendAsync("ErrorMessage", "Error al cargar el historial de mensajes");
+            }
         }
 
         /// <summary>
-        /// Limpiar mensajes de una solicitud (llamado cuando finaliza el servicio)
+        /// Obtener cantidad de mensajes no leídos
         /// </summary>
-        public async Task ClearChatHistory(int solicitudId)
+        public async Task GetUnreadCount(int solicitudId)
         {
-            if (_chatMessages.ContainsKey(solicitudId))
-            {
-                _chatMessages.Remove(solicitudId);
-                _logger.LogInformation($"Historial de chat limpiado para solicitud {solicitudId}");
-            }
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue) return;
 
-            // Notificar a todos los miembros del grupo
-            var groupName = $"solicitud_{solicitudId}";
-            await Clients.Group(groupName).SendAsync("ChatCleared", solicitudId);
+            try
+            {
+                var cantidad = await _mensajeService.ObtenerCantidadMensajesNoLeidosAsync(solicitudId, userId.Value);
+                await Clients.Caller.SendAsync("UnreadCount", solicitudId, cantidad);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener cantidad de mensajes no leídos para solicitud {solicitudId}");
+            }
         }
 
         /// <summary>

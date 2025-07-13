@@ -10,6 +10,7 @@ services:
       - ConnectionStrings__ClientesConnection=Server=db;Database=PetCareClientes;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
       - ConnectionStrings__SolicitudesConnection=Server=db;Database=PetCareSolicitudes;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
       - ConnectionStrings__CalificacionesConnection=Server=db;Database=PetCareCalificaciones;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - ConnectionStrings__MensajesConnection=Server=db;Database=PetCareMensajes;User=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
     depends_on:
       - db
     restart: unless-stopped

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { solicitudService } from '../../services/api';
+import { solicitudService, authService } from '../../services/api';
 import SolicitudForm from '../SolicitudForm';
+import ChatComponent from '../ChatComponent';
 
 interface Solicitud {
   solicitudID: number;
@@ -39,11 +40,34 @@ const ClienteDashboard: React.FC<ClienteDashboardProps> = ({ onLogout }) => {
   const [showCuidadoresModal, setShowCuidadoresModal] = useState(false);
   const [selectedSolicitudId, setSelectedSolicitudId] = useState<number | null>(null);
   const [asignandoCuidador, setAsignandoCuidador] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [chatSolicitudId, setChatSolicitudId] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   useEffect(() => {
     loadSolicitudes();
     loadCuidadoresDisponibles();
+    loadCurrentUser();
   }, []);
+
+  const loadCurrentUser = async () => {
+    try {
+      const userInfo = await authService.getMiRol();
+      setCurrentUserId(userInfo.userId);
+    } catch (error) {
+      console.error('Error loading current user:', error);
+    }
+  };
+
+  const handleOpenChat = (solicitudId: number) => {
+    setChatSolicitudId(solicitudId);
+    setShowChat(true);
+  };
+
+  const handleCloseChat = () => {
+    setShowChat(false);
+    setChatSolicitudId(null);
+  };
 
   // Polling para actualizar automáticamente cada 30 segundos
   useEffect(() => {
@@ -252,14 +276,25 @@ const ClienteDashboard: React.FC<ClienteDashboardProps> = ({ onLogout }) => {
                             </div>
                           )}
 
-                          {solicitud.estado === 'Pendiente' && (
-                            <button
-                              className="btn btn-sm btn-outline-primary mt-2"
-                              onClick={() => openCuidadoresModal(solicitud.solicitudID)}
-                            >
-                              <i className="bi bi-person-plus"></i> Elegir Cuidador
-                            </button>
-                          )}
+                          <div className="mt-2 d-flex gap-2">
+                            {(solicitud.estado === 'Aceptada' || solicitud.estado === 'En Progreso') && (
+                              <button
+                                className="btn btn-sm btn-outline-info"
+                                onClick={() => handleOpenChat(solicitud.solicitudID)}
+                              >
+                                <i className="bi bi-chat-dots"></i> Chat
+                              </button>
+                            )}
+                            
+                            {solicitud.estado === 'Pendiente' && (
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => openCuidadoresModal(solicitud.solicitudID)}
+                              >
+                                <i className="bi bi-person-plus"></i> Elegir Cuidador
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -400,6 +435,15 @@ const ClienteDashboard: React.FC<ClienteDashboardProps> = ({ onLogout }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Componente de Chat */}
+      {showChat && chatSolicitudId && currentUserId && (
+        <ChatComponent
+          solicitudId={chatSolicitudId}
+          currentUserId={currentUserId}
+          onClose={handleCloseChat}
+        />
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PetCareServicios.Data;
+using PetCareServicios.Hubs;
 using PetCareServicios.Middleware;
 using PetCareServicios.Models.Auth;
 using PetCareServicios.Services;
@@ -14,6 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configurar SignalR
+builder.Services.AddSignalR();
 
 // ===== CONFIGURACIÓN DE BASES DE DATOS =====
 
@@ -36,6 +40,10 @@ builder.Services.AddDbContext<SolicitudesDbContext>(options =>
 // Base de datos para calificaciones
 builder.Services.AddDbContext<CalificacionesDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("CalificacionesConnection")));
+
+// Base de datos para mensajes
+builder.Services.AddDbContext<MensajesDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MensajesConnection")));
 
 // ===== CONFIGURACIÓN DE IDENTITY =====
 
@@ -82,6 +90,9 @@ builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ISolicitudService, SolicitudService>();
 builder.Services.AddScoped<ICalificacionService, CalificacionService>();
 
+// Servicio de mensajes
+builder.Services.AddScoped<IMensajeService, MensajeService>();
+
 // ===== CONFIGURACIÓN DE CORS =====
 
 builder.Services.AddCors(options =>
@@ -118,6 +129,9 @@ app.UseAuthorization();
 // Mapear controladores
 app.MapControllers();
 
+// Mapear SignalR Hub
+app.MapHub<ChatHub>("/chatHub");
+
 // ===== APLICACIÓN DE MIGRACIONES =====
 
 using (var scope = app.Services.CreateScope())
@@ -134,6 +148,7 @@ using (var scope = app.Services.CreateScope())
         var clientesContext = services.GetRequiredService<ClientesDbContext>();
         var solicitudesContext = services.GetRequiredService<SolicitudesDbContext>();
         var calificacionesContext = services.GetRequiredService<CalificacionesDbContext>();
+        var mensajesContext = services.GetRequiredService<MensajesDbContext>();
 
         // Lista de contextos para aplicar migraciones
         var contexts = new (string Name, DbContext Context)[]
@@ -142,7 +157,8 @@ using (var scope = app.Services.CreateScope())
             ("CuidadoresDbContext", cuidadoresContext),
             ("ClientesDbContext", clientesContext),
             ("SolicitudesDbContext", solicitudesContext),
-            ("CalificacionesDbContext", calificacionesContext)
+            ("CalificacionesDbContext", calificacionesContext),
+            ("MensajesDbContext", mensajesContext)
         };
 
         // Aplicar migraciones a cada contexto

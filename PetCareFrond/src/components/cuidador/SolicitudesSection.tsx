@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { solicitudService, cuidadorService } from '../../services/api';
+import { solicitudService, cuidadorService, authService } from '../../services/api';
 import { CuidadorResponse } from '../../types/cuidador';
+import ChatComponent from '../ChatComponent';
 
 interface Solicitud {
   solicitudID: number;
@@ -26,6 +27,9 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  const [showChat, setShowChat] = useState(false);
+  const [selectedSolicitudId, setSelectedSolicitudId] = useState<number | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const loadSolicitudes = async () => {
     try {
@@ -50,9 +54,29 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
     }
   };
 
+  const loadCurrentUser = async () => {
+    try {
+      const userInfo = await authService.getMiRol();
+      setCurrentUserId(userInfo.userId);
+    } catch (error) {
+      console.error('Error loading current user:', error);
+    }
+  };
+
+  const handleOpenChat = (solicitudId: number) => {
+    setSelectedSolicitudId(solicitudId);
+    setShowChat(true);
+  };
+
+  const handleCloseChat = () => {
+    setShowChat(false);
+    setSelectedSolicitudId(null);
+  };
+
   useEffect(() => {
     loadSolicitudes();
     loadCuidadorProfile();
+    loadCurrentUser();
   }, []);
 
   const handleAceptarSolicitud = async (solicitudId: number) => {
@@ -348,6 +372,13 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
 
                             <div className="d-grid gap-2">
                               <button
+                                className="btn btn-outline-info btn-sm"
+                                onClick={() => handleOpenChat(solicitud.solicitudID)}
+                              >
+                                <i className="bi bi-chat-dots me-1"></i>
+                                Chat
+                              </button>
+                              <button
                                 className="btn btn-success btn-sm"
                                 onClick={() => handleAceptarSolicitud(solicitud.solicitudID)}
                               >
@@ -373,6 +404,15 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
           )}
         </div>
       </div>
+
+      {/* Componente de Chat */}
+      {showChat && selectedSolicitudId && currentUserId && (
+        <ChatComponent
+          solicitudId={selectedSolicitudId}
+          currentUserId={currentUserId}
+          onClose={handleCloseChat}
+        />
+      )}
     </div>
   );
 };
