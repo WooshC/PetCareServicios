@@ -96,9 +96,17 @@ function App() {
             setClienteHasProfile(true);
             setCurrentView('cliente-dashboard');
           } catch (error) {
+
             // Si no tiene perfil, redirigir al formulario de creación
             setClienteHasProfile(false);
             setCurrentView('cliente-form');
+            // Aquí realmente USAS el estado que acabas de setear
+    if (clienteHasProfile === false) {
+      setMessage({
+         text: response.message|| 'Por favor completa tu perfil de cliente',
+        type: 'error'
+      });
+    }
           }
         }
       } else {

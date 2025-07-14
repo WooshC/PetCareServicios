@@ -1,31 +1,20 @@
-# Build stage
-FROM node:18-alpine as build
-
+# Etapa 1: build
+FROM node:18 AS build
 WORKDIR /app
 
-# Copy package files
+# Primero copia solo los archivos necesarios para npm install (mejora el caching)
 COPY package*.json ./
+RUN npm install
 
-# Install dependencies
-RUN npm ci
-
-# Copy source code
+# Luego copia el resto y haz el build
 COPY . .
-
-# Build the app
 RUN npm run build
 
-# Production stage
+# Verifica que el directorio dist existe (nuevo paso)
+RUN ls -la /app/dist || (echo "Error: No se generó el directorio dist" && exit 1)
+
+# Etapa 2: producción con NGINX
 FROM nginx:alpine
-
-# Copy built app to nginx
 COPY --from=build /app/dist /usr/share/nginx/html
-
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expose port
 EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"] 
+CMD ["nginx", "-g", "daemon off;"]

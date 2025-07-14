@@ -25,12 +25,11 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Migrations\Cuidadores\" />
-    <Folder Include="Migrations\Calificaciones\" />
-    <Folder Include="PetCareBackend\Models\" />
-    <Folder Include="PetCareFrond\" />
-    <Folder Include="PetCareBackend\Services\" />
-  </ItemGroup>
-
+<ItemGroup>
+  <Folder Include="Migrations\Cuidadores\" />
+  <Folder Include="Migrations\Calificaciones\" />
+  <Folder Include="PetCareBackend\Models\" />
+  <!-- <Folder Include="PetCareFrond\" /> -->
+  <Folder Include="PetCareBackend\Services\" />
+</ItemGroup>
 </Project>

@@ -14,6 +14,13 @@ services:
       - db
     restart: unless-stopped
 
+  petcare-frond:
+    build:
+      context: ./PetCareFrond
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
