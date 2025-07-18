@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { solicitudService } from '../../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { solicitudService, authService } from '../../services/api';
 import SolicitudForm from '../SolicitudForm';
 
 interface Solicitud {
@@ -13,6 +13,7 @@ interface Solicitud {
   fechaCreacion: string;
   nombreCuidador?: string;
   emailCuidador?: string;
+  cuidadorID?: number; // <-- Agregado para evitar error TS
 }
 
 interface Cuidador {
@@ -39,6 +40,61 @@ const ClienteDashboard: React.FC<ClienteDashboardProps> = ({ onLogout }) => {
   const [showCuidadoresModal, setShowCuidadoresModal] = useState(false);
   const [selectedSolicitudId, setSelectedSolicitudId] = useState<number | null>(null);
   const [asignandoCuidador, setAsignandoCuidador] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
+  const [currentChatCuidador, setCurrentChatCuidador] = useState<{ cuidadorId: number; nombreCuidador: string } | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [userId, setUserId] = useState<number | null>(null);
+
+  // Obtener el userId del cliente al montar
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const res = await authService.getMiRol();
+        setUserId(res.userId);
+      } catch {}
+    };
+    fetchUserId();
+  }, []);
+
+  // Abrir chat automáticamente cuando una solicitud está asignada o en progreso
+  useEffect(() => {
+    const asignada = solicitudes.find(s => (s.estado === 'Asignada' || s.estado === 'En Progreso') && s.cuidadorID && s.nombreCuidador);
+    if (asignada && asignada.cuidadorID && asignada.nombreCuidador) {
+      setCurrentChatCuidador({ cuidadorId: asignada.cuidadorID, nombreCuidador: asignada.nombreCuidador });
+      setShowChatModal(true);
+    } else {
+      setShowChatModal(false);
+    }
+  }, [solicitudes]);
+
+  // WebSocket para chat
+  useEffect(() => {
+    if (!showChatModal || !currentChatCuidador || !userId) return;
+    let ws: WebSocket | null = null;
+    const token = localStorage.getItem('token');
+    const wsUrl = `ws://localhost:5000/api/ws/chat/connect?access_token=${token}`;
+    ws = new WebSocket(wsUrl);
+    ws.onopen = () => setSocket(ws);
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'history') setMessages(data.messages);
+      else if (data.type === 'new_message') setMessages(prev => [...prev, data.message]);
+    };
+    ws.onclose = () => setSocket(null);
+    return () => { ws && ws.close(); };
+  }, [showChatModal, currentChatCuidador, userId]);
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !socket || !currentChatCuidador || !userId) return;
+    const message = { ReceiverId: currentChatCuidador.cuidadorId, Content: newMessage };
+    socket.send(JSON.stringify(message));
+    setNewMessage('');
+  };
+
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   useEffect(() => {
     loadSolicitudes();
@@ -252,6 +308,17 @@ const ClienteDashboard: React.FC<ClienteDashboardProps> = ({ onLogout }) => {
                             </div>
                           )}
 
+                          {solicitud.nombreCuidador && solicitud.cuidadorID && !['Finalizada', 'Cancelada', 'Rechazada'].includes(solicitud.estado) && (
+                            <button
+                              className="btn btn-outline-primary btn-sm mt-2"
+                              onClick={() => {
+                                setCurrentChatCuidador({ cuidadorId: solicitud.cuidadorID!, nombreCuidador: solicitud.nombreCuidador! });
+                                setShowChatModal(true);
+                              }}
+                            >
+                              <i className="bi bi-chat-left-text"></i> Chat
+                            </button>
+                          )}
                           {solicitud.estado === 'Pendiente' && (
                             <button
                               className="btn btn-sm btn-outline-primary mt-2"
@@ -370,6 +437,61 @@ const ClienteDashboard: React.FC<ClienteDashboardProps> = ({ onLogout }) => {
                 >
                   Cancelar
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Chat */}
+      {showChatModal && currentChatCuidador && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">
+                  <i className="bi bi-chat-left-text me-2"></i>
+                  Chat con {currentChatCuidador.nombreCuidador}
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowChatModal(false)}></button>
+              </div>
+              <div className="modal-body p-0" style={{ height: '60vh' }}>
+                <div className="d-flex flex-column h-100">
+                  <div className="p-3 border-bottom bg-light">
+                    <div className="d-flex align-items-center">
+                      <div className="avatar me-2"><i className="bi bi-person-circle fs-3"></i></div>
+                      <div>
+                        <h6 className="mb-0">{currentChatCuidador.nombreCuidador}</h6>
+                        <small className="text-muted">{socket?.readyState === WebSocket.OPEN ? 'En línea' : 'Desconectado'}</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-grow-1 overflow-auto p-3">
+                    {messages.length === 0 ? (
+                      <div className="text-center text-muted py-5">
+                        <i className="bi bi-chat-square-text display-4"></i>
+                        <p className="mt-3">Envía tu primer mensaje</p>
+                      </div>
+                    ) : (
+                      messages.map((message, idx) => (
+                        <div key={message.messageId || idx} className={`mb-3 d-flex ${message.senderId === userId ? 'justify-content-end' : 'justify-content-start'}`}>
+                          <div className={`p-3 rounded-3 ${message.senderId === userId ? 'bg-primary text-white' : 'bg-light'}`} style={{ maxWidth: '70%' }}>
+                            {!message.isOwn && <small className="d-block fw-bold">{message.senderName || ''}</small>}
+                            <div>{message.content}</div>
+                            <small className={`d-block text-end ${message.senderId === userId ? 'text-white-50' : 'text-muted'}`}>{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                  <div className="p-3 border-top">
+                    <div className="input-group">
+                      <input type="text" className="form-control" placeholder="Escribe un mensaje..." value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSendMessage()} disabled={socket?.readyState !== WebSocket.OPEN} />
+                      <button className="btn btn-primary" type="button" onClick={handleSendMessage} disabled={!newMessage.trim() || socket?.readyState !== WebSocket.OPEN}><i className="bi bi-send"></i></button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

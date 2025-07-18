@@ -30,6 +30,7 @@ app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseWebSockets();
 app.MapControllers();
 
 // ===== APLICACIÓN DE MIGRACIONES Y LOGS =====

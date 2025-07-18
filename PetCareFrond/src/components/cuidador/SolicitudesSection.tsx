@@ -14,6 +14,7 @@ interface Solicitud {
   nombreCliente: string;
   emailCliente: string;
   telefonoCliente: string;
+  clienteID?: number; // Added for chat functionality
 }
 
 interface SolicitudesSectionProps {
@@ -26,6 +27,8 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
+  const [showChatModal, setShowChatModal] = useState(false); // State for chat modal
+  const [currentChatCliente, setCurrentChatCliente] = useState<{ clienteId: number; nombreCliente: string } | null>(null); // State for chat client
 
   const loadSolicitudes = async () => {
     try {
@@ -361,6 +364,17 @@ const SolicitudesSection: React.FC<SolicitudesSectionProps> = ({ onSolicitudesCo
                                 <i className="bi bi-x-circle me-1"></i>
                                 Rechazar
                               </button>
+                              {solicitud.nombreCliente && solicitud.clienteID && !['Finalizada', 'Rechazada', 'Cancelada'].includes(solicitud.estado) && (
+                                <button
+                                  className="btn btn-outline-primary btn-sm"
+                                  onClick={() => {
+                                    setCurrentChatCliente({ clienteId: solicitud.clienteID!, nombreCliente: solicitud.nombreCliente! });
+                                    setShowChatModal(true);
+                                  }}
+                                >
+                                  <i className="bi bi-chat-left-text"></i> Chat
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
