@@ -5,101 +5,21 @@ using PetCareServicios.Middleware;
 using PetCareServicios.Models.Auth;
 using PetCareServicios.Services;
 using PetCareServicios.Services.Interfaces;
+using PetCareServicios.Configuraciones;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ===== CONFIGURACIÓN DE SERVICIOS =====
+// ==================== CONFIGURACIÓN DE SERVICIOS ====================
 
-// Agregar servicios al contenedor
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// ===== CONFIGURACIÓN DE BASES DE DATOS =====
-
-// Base de datos principal para autenticación
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Base de datos para cuidadores
-builder.Services.AddDbContext<CuidadoresDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("CuidadoresConnection")));
-
-// Base de datos para clientes
-builder.Services.AddDbContext<ClientesDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ClientesConnection")));
-
-// Base de datos para solicitudes
-builder.Services.AddDbContext<SolicitudesDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SolicitudesConnection")));
-
-// Base de datos para calificaciones
-builder.Services.AddDbContext<CalificacionesDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("CalificacionesConnection")));
-
-// ===== CONFIGURACIÓN DE IDENTITY =====
-
-builder.Services.AddIdentity<User, UserRole>(options =>
-{
-    // Configuración de contraseñas
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequiredLength = 8;
-
-    // Configuración de usuarios
-    options.User.RequireUniqueEmail = true;
-    options.SignIn.RequireConfirmedEmail = false; // Cambiar a true en producción
-})
-.AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
-
-// ===== CONFIGURACIÓN DE AUTENTICACIÓN JWT =====
-
-builder.Services.AddJwtAuthentication(builder.Configuration);
-
-// ===== CONFIGURACIÓN DE AUTORIZACIÓN =====
-
-builder.Services.AddAuthorization(options =>
-{
-    // Políticas de autorización
-    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("RequireClienteRole", policy => policy.RequireRole("Cliente"));
-    options.AddPolicy("RequireCuidadorRole", policy => policy.RequireRole("Cuidador"));
-});
-
-// ===== REGISTRO DE SERVICIOS =====
-
-// Servicios de autenticación
-builder.Services.AddScoped<IAuthService, AuthService>();
-
-// Servicios de gestión de perfiles
-builder.Services.AddScoped<ICuidadorService, CuidadorService>();
-builder.Services.AddScoped<IClienteService, ClienteService>();
-
-// Servicios de gestión de solicitudes y calificaciones
-builder.Services.AddScoped<ISolicitudService, SolicitudService>();
-builder.Services.AddScoped<ICalificacionService, CalificacionService>();
-
-// ===== CONFIGURACIÓN DE CORS =====
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-    {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
-    });
-});
+builder.Services.AddPetCareServices(builder.Configuration);
 
 var app = builder.Build();
 
-// ===== CONFIGURACIÓN DE LA APLICACIÓN =====
+// ==================== CONFIGURACIÓN DEL PIPELINE ====================
 
-// Configurar el pipeline de solicitudes HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -107,18 +27,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// Configurar CORS
 app.UseCors("AllowFrontend");
-
-// Configurar autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Mapear controladores
 app.MapControllers();
 
-// ===== APLICACIÓN DE MIGRACIONES =====
+// ===== APLICACIÓN DE MIGRACIONES Y LOGS =====
 
 using (var scope = app.Services.CreateScope())
 {
